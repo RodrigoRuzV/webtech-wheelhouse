@@ -39,4 +39,3 @@
 
 /node_modules
 /vendor/bundle
-!/app/assets/builds/bootstrap.bundle.min.js
