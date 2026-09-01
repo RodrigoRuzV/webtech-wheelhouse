@@ -1,0 +1,21 @@
+<% content_for :title, "Wheelhouse — Services" %>
+
+<h1>Services &amp; prices</h1>
+<p class="lead">Every job we do comes from this list. Prices shown are our standard rate.</p>
+
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Job</th>
+      <th scope="col" class="text-end">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @jobs.each do |job| %>
+      <tr>
+        <td><%= job[:name] %></td>
+        <td class="text-end">$<%= job[:price] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

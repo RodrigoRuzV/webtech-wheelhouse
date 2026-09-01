@@ -1,0 +1,27 @@
+<% content_for :title, "Wheelhouse — Home" %>
+
+<div class="p-5 mb-4 bg-body-tertiary rounded-3">
+  <div class="container-fluid py-4">
+    <h1 class="display-5 fw-bold">Wheelhouse</h1>
+    <p class="col-md-8 fs-4">
+      Your neighbourhood bicycle repair shop. Drop off your bike, and follow its repair from the counter — no more calling to ask if it's ready.
+    </p>
+    <a class="btn btn-primary btn-lg" href="<%= visiting_path %>" role="button">Visit the workshop</a>
+    <a class="btn btn-outline-secondary btn-lg" href="<%= services_path %>" role="button">See our prices</a>
+  </div>
+</div>
+
+<div class="row align-items-md-stretch">
+  <div class="col-md-6">
+    <div class="h-100 p-4 bg-body-tertiary rounded-3">
+      <h2>Careful, honest repairs</h2>
+      <p>Every bike gets a proper diagnosis before any work starts, and every job is priced from the same public list — no surprises at pickup.</p>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="h-100 p-4 bg-body-tertiary rounded-3">
+      <h2>Know before you go</h2>
+      <p>Check our <%= link_to "price list", services_path %> and <%= link_to "how to find us", visiting_path %> before you bring your bike in.</p>
+    </div>
+  </div>
+</div>

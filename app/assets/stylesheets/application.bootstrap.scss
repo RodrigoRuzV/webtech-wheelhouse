@@ -1,0 +1,5 @@
+// Bootstrap variable overrides — must come BEFORE the @import below.
+$primary: #2f5233;
+$font-family-sans-serif: "Helvetica Neue", Arial, sans-serif;
+
+@import "bootstrap/scss/bootstrap";

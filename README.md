@@ -9,9 +9,30 @@ Wheelhouse is the system for a neighbourhood bicycle repair shop. It replaces th
 - **Owner** — sees which repairs have passed their promised day, and keeps the price list current.
 - **Customer** — checks the shop's price list on the public website, without calling to ask.
 
-## Documents
+## Running the app
 
-This repository is a specification, not yet an application — Lab 4 and every lab after it build the Rails application on top of what's written here.
+### Prerequisites
+
+- Ruby 4.0.6
+- Rails 8.1.3.1
+- PostgreSQL 16 (running locally)
+- Node.js and Yarn (used to compile Bootstrap's CSS)
+
+### Setup
+
+    bundle install
+    bin/rails db:prepare
+    yarn install
+
+### Start the server
+
+    bin/dev
+
+This starts Puma and the CSS watcher together. Visit http://localhost:3000.
+
+As of Lab 4, the app has four public pages — Home, Services, Visiting the workshop, and About — built with Rails, PostgreSQL, and Bootstrap. There are no models, migrations, or database tables yet; that starts in Lab 5.
+
+## Documents
 
 - [`docs/user-stories.md`](docs/user-stories.md) — the roles, the user stories, and their acceptance criteria.
 - [`docs/domain-model.md`](docs/domain-model.md) — the relational diagram (DBML, built in dbdiagram.io), the repair lifecycle, the entity-to-story traceability table, and the two modelling decisions defended.
