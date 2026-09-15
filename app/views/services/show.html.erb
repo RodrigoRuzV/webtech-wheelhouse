@@ -1,0 +1,28 @@
+<% content_for :title, @service.name %>
+
+<p><%= link_to "&larr; Back to services".html_safe, services_path %></p>
+
+<h1><%= @service.name %></h1>
+<p class="lead">Standard price: <%= number_to_currency(@service.price) %></p>
+
+<h2>Charged on</h2>
+<% if @repair_jobs.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Repair</th>
+        <th scope="col" class="text-end">Price charged</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @repair_jobs.each do |repair_job| %>
+        <tr>
+          <td><%= link_to "Repair for #{repair_job.repair.customer.name}", repair_job.repair %></td>
+          <td class="text-end"><%= number_to_currency(repair_job.price_charged) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>This service hasn't been charged on any repair yet.</p>
+<% end %>

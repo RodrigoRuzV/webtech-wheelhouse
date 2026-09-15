@@ -1,0 +1,6 @@
+<tr class="<%= "table-danger" if overdue?(repair) %>">
+  <td><%= link_to "#{repair.bike.make} #{repair.bike.model}", repair.bike %></td>
+  <td><%= link_to repair.customer.name, repair.customer %></td>
+  <td><%= link_to status_label(repair.status), repair %></td>
+  <td><%= repair.promised_on&.strftime("%b %-d, %Y") || "—" %></td>
+</tr>

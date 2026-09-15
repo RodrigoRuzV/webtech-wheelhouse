@@ -32,6 +32,7 @@ Table bikes {
   make varchar [not null]
   model varchar [not null]
   serial_number varchar [not null, unique, note: 'prevents the March mix-up: identifies the physical bike, not just make+model+colour']
+  customer_id integer [ref: > customers.id, not null, note: 'owner of the bike, stored directly as of Lab 6 -- see Changes since Lab 3']
   created_at datetime [not null]
   updated_at datetime [not null]
 }
@@ -84,6 +85,11 @@ Table repair_jobs {
 - **`services.price` and `repair_jobs.price_charged` now declare precision and scale** (`decimal(8,2)`) instead of a bare `decimal`. Lab 5 requires money columns to state precision/scale explicitly.
 - **`created_at`/`updated_at` added to every table**, replacing the ad-hoc `repairs.created_at [default: now()]` from Lab 3. Lab 5 requires the standard Rails timestamp pair everywhere; Active Record sets both on save, so no DB-level default is needed.
 - **Every `_id` column (`bike_id`, `customer_id`, `intake_staff_id`, `mechanic_id`, `repair_id`, `service_id`, `returned_by_staff_id`) is a plain indexed column with no foreign key constraint in the database.** The `ref:` arrows above are still the conceptual relationships; the actual constraint — and the Active Record association that uses it — is Lab 7.
+
+## Changes since Lab 5
+
+- **Every `_id` column now has a real foreign key constraint** (Lab 6), enforced by PostgreSQL, and every model declares the matching `belongs_to` / `has_many` pair. No validations, scopes, callbacks or enums — those are still later labs.
+- **`bikes.customer_id` added, `NOT NULL`, with its own foreign key to `customers`.** Lab 3 deliberately left this out and inferred the current owner from the `customer_id` on the bike's most recent `repair` (see `docs/decisions.md`, question 3), to avoid modelling something the description never asked for. Lab 6 needs a bike's owner and a customer's bikes to be a plain association walked with no `where`, which a derived read of the latest repair can't be — an actual `has_many`/`belongs_to` pair needs a column. This keeps the same assumption as before (no formal ownership transfer, one owner for the bike's life in the system), it just stores that owner instead of recomputing it on every read. `repairs.customer_id` is unchanged and still answers a different question: who dropped this bike off *this time*, which in principle could differ from the bike's registered owner.
 
 ## Lifecycle
 

@@ -10,16 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_170500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bikes", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
     t.string "make", null: false
     t.string "model", null: false
     t.string "serial_number", null: false
     t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_bikes_on_customer_id"
     t.index ["serial_number"], name: "index_bikes_on_serial_number", unique: true
   end
 
@@ -74,4 +76,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_170500) do
     t.string "role", null: false
     t.datetime "updated_at", null: false
   end
+
+  add_foreign_key "bikes", "customers"
+  add_foreign_key "repair_jobs", "repairs"
+  add_foreign_key "repair_jobs", "services"
+  add_foreign_key "repairs", "bikes"
+  add_foreign_key "repairs", "customers"
+  add_foreign_key "repairs", "staff_members", column: "intake_staff_id"
+  add_foreign_key "repairs", "staff_members", column: "mechanic_id"
+  add_foreign_key "repairs", "staff_members", column: "returned_by_staff_id"
 end

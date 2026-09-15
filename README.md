@@ -30,9 +30,9 @@ Wheelhouse is the system for a neighbourhood bicycle repair shop. It replaces th
 
     bin/dev
 
-This starts Puma and the CSS watcher together. Visit http://localhost:3000/services — the price list there is read live from the `services` table, so editing `db/seeds.rb` and reseeding changes what the page shows.
+This starts Puma and the CSS watcher together. Visit http://localhost:3000 and use the navbar — Customers, Bikes, Repairs, Services and Staff each have a list page and a page per record, all read live from the database, so editing `db/seeds.rb` and reseeding changes what every page shows.
 
-As of Lab 5, the app has a PostgreSQL schema — six tables, one migration and one plain model each — built entirely from migrations in `db/migrate/`, with no associations or validations yet. The services page reads its price list from the `services` table; the other three public pages are still static. Associations, validations, and the pages that show customers, bikes, and repairs come in later labs.
+As of Lab 6, every `_id` column in the schema is a real foreign key, enforced by PostgreSQL, and every model declares its side of the association that column stands for (`belongs_to` / `has_many`, one-to-many only — no validations, scopes, callbacks or enums yet, those are Lab 7+). Customers, bikes, repairs, services and staff each have a hand-written controller with two actions, `index` and `show`, wired through `resources ... , only: [:index, :show]`; the join between a repair and a service (`repair_jobs`) has no pages of its own and appears on the repair's `show` page instead. Everything is still read-only — forms arrive in Lab 8.
 
 ## Documents
 

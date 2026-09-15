@@ -3,7 +3,12 @@ Rails.application.routes.draw do
 
   root "pages#home"
 
-  get "services", to: "pages#services", as: :services
+  resources :customers, only: [ :index, :show ]
+  resources :bikes, only: [ :index, :show ]
+  resources :repairs, only: [ :index, :show ]
+  resources :services, only: [ :index, :show ]
+  resources :staff_members, only: [ :index, :show ]
+
   get "visiting-the-workshop", to: "pages#visiting", as: :visiting
   get "about", to: "pages#about", as: :about
 end

@@ -1,0 +1,25 @@
+<% content_for :title, @staff_member.name %>
+
+<p><%= link_to "&larr; Back to staff".html_safe, staff_members_path %></p>
+
+<h1><%= @staff_member.name %></h1>
+<p class="lead"><%= @staff_member.role.capitalize %></p>
+
+<h2>Repairs as mechanic</h2>
+<% if @mechanic_repairs.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Bike</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Status</th>
+        <th scope="col">Promised</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @mechanic_repairs %>
+    </tbody>
+  </table>
+<% else %>
+  <p>Not currently assigned to any repair as mechanic.</p>
+<% end %>

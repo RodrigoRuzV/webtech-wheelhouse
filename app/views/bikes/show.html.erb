@@ -1,0 +1,28 @@
+<% content_for :title, "#{@bike.make} #{@bike.model}" %>
+
+<p><%= link_to "&larr; Back to bikes".html_safe, bikes_path %></p>
+
+<h1><%= @bike.make %> <%= @bike.model %></h1>
+<p class="lead">
+  Serial number <%= @bike.serial_number %>
+  &mdash; owner: <%= link_to @bike.customer.name, @bike.customer %>
+</p>
+
+<h2>Repairs</h2>
+<% if @repairs.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Bike</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Status</th>
+        <th scope="col">Promised</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @repairs %>
+    </tbody>
+  </table>
+<% else %>
+  <p>This bike hasn't been in for a repair yet.</p>
+<% end %>

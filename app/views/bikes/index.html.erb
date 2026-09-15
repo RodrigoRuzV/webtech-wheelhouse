@@ -1,0 +1,21 @@
+<% content_for :title, "Wheelhouse — Bikes" %>
+
+<h1>Bikes</h1>
+
+<% if @bikes.any? %>
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Make</th>
+        <th scope="col">Model</th>
+        <th scope="col">Serial number</th>
+        <th scope="col">Owner</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @bikes %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No bikes have come through the shop yet.</p>
+<% end %>

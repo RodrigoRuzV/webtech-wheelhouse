@@ -1,0 +1,19 @@
+<% content_for :title, "Wheelhouse — Staff" %>
+
+<h1>Staff</h1>
+
+<% if @staff_members.any? %>
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @staff_members %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No staff on file yet.</p>
+<% end %>

@@ -2,9 +2,9 @@
 #
 # Wheelhouse seed data.
 #
-# Only the six plain models from Lab 5 exist (no associations, validations
-# or scopes yet), so every relationship below is set through its own
-# `_id` attribute rather than an association shorthand.
+# Lab 6 adds belongs_to/has_many associations, but still no validations
+# or scopes, so every relationship below is set through its own `_id`
+# attribute rather than an association shorthand.
 #
 # Idempotent: the six tables this file owns are cleared before being
 # rebuilt, so running `bin/rails db:seed` twice leaves the same number of
@@ -85,19 +85,23 @@ ActiveRecord::Base.transaction do
   # Bikes — at least twelve. bike_1 and bike_2 are the same make and
   # model, told apart only by serial_number (the "March mix-up", Lab 3).
   # ---------------------------------------------------------------------
-  bike_1  = Bike.create!(make: "Trek",        model: "Marlin 5",     serial_number: "WH-10234")
-  bike_2  = Bike.create!(make: "Trek",        model: "Marlin 5",     serial_number: "WH-10567")
-  bike_3  = Bike.create!(make: "Giant",       model: "Escape 3",     serial_number: "WH-20456")
-  bike_4  = Bike.create!(make: "Specialized", model: "Allez",        serial_number: "WH-20789")
-  bike_5  = Bike.create!(make: "Cannondale",  model: "Quick CX",     serial_number: "WH-21001")
-  bike_6  = Bike.create!(make: "Santa Cruz",  model: "Chameleon",    serial_number: "WH-21334")
-  bike_7  = Bike.create!(make: "Bianchi",     model: "Via Nirone 7", serial_number: "WH-21678")
-  bike_8  = Bike.create!(make: "Scott",       model: "Aspect 950",   serial_number: "WH-22004")
-  bike_9  = Bike.create!(make: "Cervelo",     model: "R5",           serial_number: "WH-22315")
-  bike_10 = Bike.create!(make: "Giant",       model: "Talon 3",      serial_number: "WH-22689")
-  bike_11 = Bike.create!(make: "Trek",        model: "FX 3",         serial_number: "WH-23012")
-  bike_12 = Bike.create!(make: "Specialized", model: "Sirrus X",     serial_number: "WH-23345")
-  bike_13 = Bike.create!(make: "Cannondale",  model: "Trail 5",      serial_number: "WH-23678")
+  # Owners are assigned to match the repairs below one-for-one (no bike
+  # is dropped off by two different customers), and mirror the Lab 3
+  # assumption that a bike has exactly one owner over its life in the
+  # system. Ana and Javier each own two bikes.
+  bike_1  = Bike.create!(make: "Trek",        model: "Marlin 5",     serial_number: "WH-10234", customer_id: ana.id)
+  bike_2  = Bike.create!(make: "Trek",        model: "Marlin 5",     serial_number: "WH-10567", customer_id: javier.id)
+  bike_3  = Bike.create!(make: "Giant",       model: "Escape 3",     serial_number: "WH-20456", customer_id: camila_v.id)
+  bike_4  = Bike.create!(make: "Specialized", model: "Allez",        serial_number: "WH-20789", customer_id: ana.id)
+  bike_5  = Bike.create!(make: "Cannondale",  model: "Quick CX",     serial_number: "WH-21001", customer_id: francisco.id)
+  bike_6  = Bike.create!(make: "Santa Cruz",  model: "Chameleon",    serial_number: "WH-21334", customer_id: daniela.id)
+  bike_7  = Bike.create!(make: "Bianchi",     model: "Via Nirone 7", serial_number: "WH-21678", customer_id: matias.id)
+  bike_8  = Bike.create!(make: "Scott",       model: "Aspect 950",   serial_number: "WH-22004", customer_id: sofia.id)
+  bike_9  = Bike.create!(make: "Cervelo",     model: "R5",           serial_number: "WH-22315", customer_id: cristobal.id)
+  bike_10 = Bike.create!(make: "Giant",       model: "Talon 3",      serial_number: "WH-22689", customer_id: isidora.id)
+  bike_11 = Bike.create!(make: "Trek",        model: "FX 3",         serial_number: "WH-23012", customer_id: javier.id)
+  bike_12 = Bike.create!(make: "Specialized", model: "Sirrus X",     serial_number: "WH-23345", customer_id: sofia.id)
+  bike_13 = Bike.create!(make: "Cannondale",  model: "Trail 5",      serial_number: "WH-23678", customer_id: matias.id)
 
   # ---------------------------------------------------------------------
   # Repairs + the services charged on each. `add_jobs` charges today's
@@ -122,14 +126,14 @@ ActiveRecord::Base.transaction do
     bike_id: bike_1.id, customer_id: ana.id, intake_staff_id: valentina.id,
     status: "dropped_off", created_at: now - 2.hours
   )
-  add_jobs.call(r1, ["Flat tire repair", nil])
+  add_jobs.call(r1, [ "Flat tire repair", nil ])
 
   # R2 — a mechanic is looking at it.
   r2 = Repair.create!(
     bike_id: bike_2.id, customer_id: javier.id, intake_staff_id: valentina.id,
     mechanic_id: diego.id, status: "diagnosing", created_at: now - 2.days
   )
-  add_jobs.call(r2, ["Brake adjustment", nil])
+  add_jobs.call(r2, [ "Brake adjustment", nil ])
 
   # R3 — quoted, waiting on the customer.
   r3 = Repair.create!(
@@ -137,7 +141,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: camila.id, status: "awaiting_approval", created_at: now - 4.days,
     quoted_at: now - 2.days, promised_on: Date.current + 3.days
   )
-  add_jobs.call(r3, ["Bearing service", nil], ["Wheel truing", nil])
+  add_jobs.call(r3, [ "Bearing service", nil ], [ "Wheel truing", nil ])
 
   # R4 — approved and being worked on; one job discounted for a regular.
   r4 = Repair.create!(
@@ -145,7 +149,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: martin.id, status: "in_progress", created_at: now - 6.days,
     quoted_at: now - 5.days, promised_on: Date.current + 1.day
   )
-  add_jobs.call(r4, ["Tune-up", nil], ["Chain replacement", 25], ["Cable replacement", nil])
+  add_jobs.call(r4, [ "Tune-up", nil ], [ "Chain replacement", 25 ], [ "Cable replacement", nil ])
 
   # R5 — quoted, customer said no.
   r5 = Repair.create!(
@@ -153,7 +157,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: diego.id, status: "declined_pickup_pending", created_at: now - 5.days,
     quoted_at: now - 4.days, promised_on: Date.current - 1.day
   )
-  add_jobs.call(r5, ["Full overhaul", nil])
+  add_jobs.call(r5, [ "Full overhaul", nil ])
 
   # R6 — quoted, approved, finished; waiting at the counter.
   r6 = Repair.create!(
@@ -161,7 +165,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: martin.id, status: "ready_for_pickup", created_at: now - 3.days,
     quoted_at: now - 2.days, promised_on: Date.current, finished_at: now - 6.hours
   )
-  add_jobs.call(r6, ["Brake pad replacement", nil], ["Gear tuning", nil])
+  add_jobs.call(r6, [ "Brake pad replacement", nil ], [ "Gear tuning", nil ])
 
   # R7 — full lifecycle, already picked up.
   r7 = Repair.create!(
@@ -170,7 +174,7 @@ ActiveRecord::Base.transaction do
     quoted_at: now - 9.days, promised_on: Date.current - 5.days,
     finished_at: now - 4.days, returned_at: now - 3.days, returned_by_staff_id: valentina.id
   )
-  add_jobs.call(r7, ["Chain replacement", nil], ["Tire replacement", nil])
+  add_jobs.call(r7, [ "Chain replacement", nil ], [ "Tire replacement", nil ])
 
   # R8 — simple same-day job: no quote needed, dropped off and picked up today.
   r8 = Repair.create!(
@@ -178,7 +182,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: camila.id, status: "picked_up", created_at: now - 6.hours,
     finished_at: now - 3.hours, returned_at: now - 1.hour, returned_by_staff_id: valentina.id
   )
-  add_jobs.call(r8, ["Flat tire repair", nil])
+  add_jobs.call(r8, [ "Flat tire repair", nil ])
 
   # R9 — overdue: promised days ago, still in progress.
   r9 = Repair.create!(
@@ -186,7 +190,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: martin.id, status: "in_progress", created_at: now - 12.days,
     quoted_at: now - 11.days, promised_on: Date.current - 4.days
   )
-  add_jobs.call(r9, ["Frame alignment check", nil], ["Bearing service", nil])
+  add_jobs.call(r9, [ "Frame alignment check", nil ], [ "Bearing service", nil ])
 
   # R10 — from before last January: charged less than today's list price.
   r10 = Repair.create!(
@@ -196,28 +200,28 @@ ActiveRecord::Base.transaction do
     finished_at: now - 14.months + 2.days, returned_at: now - 14.months + 3.days,
     returned_by_staff_id: valentina.id
   )
-  add_jobs.call(r10, ["Tune-up", 40])
+  add_jobs.call(r10, [ "Tune-up", 40 ])
 
   # R11 — the same bike, back again, much more recently.
   r11 = Repair.create!(
     bike_id: bike_6.id, customer_id: daniela.id, intake_staff_id: valentina.id,
     mechanic_id: camila.id, status: "diagnosing", created_at: now - 1.day
   )
-  add_jobs.call(r11, ["Brake bleed", nil])
+  add_jobs.call(r11, [ "Brake bleed", nil ])
 
   # R12 — another bike, just dropped off.
   r12 = Repair.create!(
     bike_id: bike_11.id, customer_id: javier.id, intake_staff_id: valentina.id,
     status: "dropped_off", created_at: now - 1.hour
   )
-  add_jobs.call(r12, ["Cable replacement", nil])
+  add_jobs.call(r12, [ "Cable replacement", nil ])
 
   # R13 — being diagnosed.
   r13 = Repair.create!(
     bike_id: bike_12.id, customer_id: sofia.id, intake_staff_id: valentina.id,
     mechanic_id: diego.id, status: "diagnosing", created_at: now - 1.day
   )
-  add_jobs.call(r13, ["Wheel truing", nil])
+  add_jobs.call(r13, [ "Wheel truing", nil ])
 
   # R14 — quoted, waiting on the customer.
   r14 = Repair.create!(
@@ -225,7 +229,7 @@ ActiveRecord::Base.transaction do
     mechanic_id: martin.id, status: "awaiting_approval", created_at: now - 3.days,
     quoted_at: now - 2.days, promised_on: Date.current + 2.days
   )
-  add_jobs.call(r14, ["Suspension fork service", nil], ["Disc brake rotor replacement", nil])
+  add_jobs.call(r14, [ "Suspension fork service", nil ], [ "Disc brake rotor replacement", nil ])
 
   # R15 — simple job, finished, waiting at the counter.
   r15 = Repair.create!(
@@ -233,14 +237,14 @@ ActiveRecord::Base.transaction do
     mechanic_id: camila.id, status: "ready_for_pickup", created_at: now - 2.days,
     promised_on: Date.current, finished_at: now - 2.hours
   )
-  add_jobs.call(r15, ["Spoke replacement", nil])
+  add_jobs.call(r15, [ "Spoke replacement", nil ])
 
   # R16 — a second, brand-new repair on Camila's bike.
   r16 = Repair.create!(
     bike_id: bike_3.id, customer_id: camila_v.id, intake_staff_id: valentina.id,
     status: "dropped_off", created_at: now - 30.minutes
   )
-  add_jobs.call(r16, ["Headset adjustment", nil])
+  add_jobs.call(r16, [ "Headset adjustment", nil ])
 
   # R17 — an older, already-collected repair for Sofía.
   r17 = Repair.create!(
@@ -249,7 +253,7 @@ ActiveRecord::Base.transaction do
     quoted_at: now - 7.days, promised_on: Date.current - 5.days,
     finished_at: now - 4.days, returned_at: now - 3.days, returned_by_staff_id: valentina.id
   )
-  add_jobs.call(r17, ["Bearing service", nil])
+  add_jobs.call(r17, [ "Bearing service", nil ])
 end
 
 puts "Seeded #{Service.count} services, #{StaffMember.count} staff, " \

@@ -1,0 +1,44 @@
+<% content_for :title, @customer.name %>
+
+<p><%= link_to "&larr; Back to customers".html_safe, customers_path %></p>
+
+<h1><%= @customer.name %></h1>
+<p class="lead"><%= @customer.phone %></p>
+
+<h2>Bikes</h2>
+<% if @bikes.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Make</th>
+        <th scope="col">Model</th>
+        <th scope="col">Serial number</th>
+        <th scope="col">Owner</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @bikes %>
+    </tbody>
+  </table>
+<% else %>
+  <p>This customer hasn't registered a bike yet.</p>
+<% end %>
+
+<h2>Repairs</h2>
+<% if @repairs.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Bike</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Status</th>
+        <th scope="col">Promised</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= render @repairs %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No repairs on file for this customer.</p>
+<% end %>

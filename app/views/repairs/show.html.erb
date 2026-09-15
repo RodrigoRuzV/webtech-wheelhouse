@@ -1,0 +1,77 @@
+<% content_for :title, "Repair for #{@repair.customer.name}" %>
+
+<p><%= link_to "&larr; Back to repairs".html_safe, repairs_path %></p>
+
+<h1>Repair for <%= link_to @repair.customer.name, @repair.customer %></h1>
+<p class="lead">
+  <%= link_to "#{@repair.bike.make} #{@repair.bike.model}", @repair.bike %>
+  &mdash; serial <%= @repair.bike.serial_number %>
+</p>
+
+<table class="table table-borderless w-auto">
+  <tbody>
+    <tr>
+      <th scope="row">Status</th>
+      <td><%= status_label(@repair.status) %></td>
+    </tr>
+    <tr>
+      <th scope="row">Intake staff</th>
+      <td><%= link_to @repair.intake_staff.name, @repair.intake_staff %></td>
+    </tr>
+    <tr>
+      <th scope="row">Mechanic</th>
+      <td><%= @repair.mechanic ? link_to(@repair.mechanic.name, @repair.mechanic) : "Not assigned yet" %></td>
+    </tr>
+    <tr>
+      <th scope="row">Promised</th>
+      <td><%= @repair.promised_on&.strftime("%b %-d, %Y") || "—" %></td>
+    </tr>
+    <tr>
+      <th scope="row">Quoted</th>
+      <td><%= @repair.quoted_at&.strftime("%b %-d, %Y %H:%M") || "—" %></td>
+    </tr>
+    <tr>
+      <th scope="row">Finished</th>
+      <td><%= @repair.finished_at&.strftime("%b %-d, %Y %H:%M") || "—" %></td>
+    </tr>
+    <tr>
+      <th scope="row">Returned to customer</th>
+      <td>
+        <% if @repair.returned_at %>
+          <%= @repair.returned_at.strftime("%b %-d, %Y %H:%M") %>
+          (by <%= link_to @repair.returned_by_staff.name, @repair.returned_by_staff %>)
+        <% else %>
+          Not yet
+        <% end %>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Services charged</h2>
+<% if @repair_jobs.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Service</th>
+        <th scope="col" class="text-end">Price charged</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @repair_jobs.each do |repair_job| %>
+        <tr>
+          <td><%= link_to repair_job.service.name, repair_job.service %></td>
+          <td class="text-end"><%= number_to_currency(repair_job.price_charged) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row">Total</th>
+        <td class="text-end"><strong><%= number_to_currency(@repair_jobs.sum(&:price_charged)) %></strong></td>
+      </tr>
+    </tfoot>
+  </table>
+<% else %>
+  <p>No services have been charged on this repair yet.</p>
+<% end %>
