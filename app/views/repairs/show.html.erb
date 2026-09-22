@@ -68,7 +68,7 @@
     <tfoot>
       <tr>
         <th scope="row">Total</th>
-        <td class="text-end"><strong><%= number_to_currency(@repair_jobs.sum(&:price_charged)) %></strong></td>
+        <td class="text-end"><strong><%= number_to_currency(@repair.total) %></strong></td>
       </tr>
     </tfoot>
   </table>

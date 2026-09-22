@@ -91,6 +91,16 @@ Table repair_jobs {
 - **Every `_id` column now has a real foreign key constraint** (Lab 6), enforced by PostgreSQL, and every model declares the matching `belongs_to` / `has_many` pair. No validations, scopes, callbacks or enums — those are still later labs.
 - **`bikes.customer_id` added, `NOT NULL`, with its own foreign key to `customers`.** Lab 3 deliberately left this out and inferred the current owner from the `customer_id` on the bike's most recent `repair` (see `docs/decisions.md`, question 3), to avoid modelling something the description never asked for. Lab 6 needs a bike's owner and a customer's bikes to be a plain association walked with no `where`, which a derived read of the latest repair can't be — an actual `has_many`/`belongs_to` pair needs a column. This keeps the same assumption as before (no formal ownership transfer, one owner for the bike's life in the system), it just stores that owner instead of recomputing it on every read. `repairs.customer_id` is unchanged and still answers a different question: who dropped this bike off *this time*, which in principle could differ from the bike's registered owner.
 
+## Changes since Lab 6
+
+- **Every `has_many` declares a `dependent:` option**, except `Customer#bikes` and `Service#repair_jobs`: a customer who owns a bike, or a service charged on a repair, cannot be destroyed at all — a `before_destroy` callback adds a counter-friendly message to `errors` and aborts, rather than letting Postgres or a generic `dependent:` message speak for it.
+- **`has_many :through` added**: `Repair#services` and `Service#repairs` (through `repair_jobs`), and `Customer#repairs_through_bikes` (through `bikes`) — a second, distinct path from `Customer#repairs` (who dropped the bike off *this* time) to the repairs on the bikes a customer owns.
+- **Validations**: `presence` on every `NOT NULL` column, `uniqueness` on `bikes.serial_number` and `services.name`, `numericality` (`greater_than: 0`) on `services.price` and `repair_jobs.price_charged`, plus two custom validations on `Repair` — a promised or returned day can't be before the day the bike was dropped off, and `in_progress` / `declined_pickup_pending` require `quoted_at` to be set.
+- **`repairs.status` is now an `enum`** (string values, matching the lifecycle above) — no state name appears as a string literal anywhere else in the app.
+- **Scopes replace every `order` and the date comparison that used to live in a helper**: `newest_first`, `by_name`, `by_make_and_model`, `by_role_and_name` per model, plus `Repair.open` / `Repair.overdue` and the instance methods `Repair#overdue?` and `Repair#total`.
+- **`bikes.serial_number` is normalised (`strip` + `upcase`) in a `before_validation` callback**, so `" wtu123 "` and `"WTU123"` are the same bike for the unique index and the uniqueness validation; `services.name` gets the same `strip` treatment.
+- **Every `index` and `show` eager-loads what its view renders**, via `includes` in the controller — no change to the views themselves.
+
 ## Lifecycle
 
 `repairs.status` is the lifecycle of a single repair, from the bike arriving to the bike leaving.
