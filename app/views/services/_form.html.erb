@@ -1,0 +1,25 @@
+<%# The one form for a service: new and edit both render it, and only the
+    object handed to it differs. f.submit reads "Create Service" for a new
+    record and "Update Service" for a saved one. %>
+<%# data-turbo="false": the form is submitted by the browser itself, not
+    by Turbo, so a refused write (422) leaves the URL bar at the path the
+    form was posted to (/services or /services/:id) and a valid one follows the
+    redirect like any page. It also means the form behaves the same with
+    JavaScript turned off. %>
+<%= form_with model: service, data: { turbo: false } do |f| %>
+  <%= render "shared/error_summary", object: service %>
+
+  <div class="mb-3">
+    <%= f.label :name, class: "form-label" %>
+    <%= f.text_field :name, class: field_class(f, :name) %>
+    <%= field_errors(f, :name) %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :price, "Standard price", class: "form-label" %>
+    <%= f.number_field :price, step: 0.01, class: field_class(f, :price) %>
+    <%= field_errors(f, :price) %>
+  </div>
+
+  <%= f.submit class: "btn btn-primary" %>
+<% end %>

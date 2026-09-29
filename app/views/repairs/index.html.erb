@@ -1,6 +1,9 @@
 <% content_for :title, "Wheelhouse — Repairs" %>
 
-<h1>Repairs</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="mb-0">Repairs</h1>
+  <%= link_to "New repair", new_repair_path, class: "btn btn-primary" %>
+</div>
 
 <% if @repairs.any? %>
   <table class="table table-striped table-hover">

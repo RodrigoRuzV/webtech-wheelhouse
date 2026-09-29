@@ -8,6 +8,12 @@
   &mdash; serial <%= @repair.bike.serial_number %>
 </p>
 
+<div class="d-flex gap-2 mb-4">
+  <%= link_to "Edit", edit_repair_path(@repair), class: "btn btn-outline-primary" %>
+  <%= button_to "Delete", @repair, method: :delete, class: "btn btn-outline-danger",
+        form: { data: { turbo_confirm: "Delete the repair for #{@repair.customer.name}'s bike #{@repair.bike.serial_number}? Its service lines are deleted with it." } } %>
+</div>
+
 <table class="table table-borderless w-auto">
   <tbody>
     <tr>

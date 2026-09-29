@@ -1,0 +1,124 @@
+<%# The one form for a repair, rendered by new and edit. It writes two
+    tables in one save: the repair, and its lines (repair_jobs) through
+    accepts_nested_attributes_for. Works without JavaScript: the controller
+    hands it a few empty lines, and an empty line is ignored on save.
+    The customer is not a field: it is taken from the bike's owner. %>
+<%# data-turbo="false": the form is submitted by the browser itself, not
+    by Turbo, so a refused write (422) leaves the URL bar at the path the
+    form was posted to (/repairs or /repairs/:id) and a valid one follows the
+    redirect like any page. It also means the form behaves the same with
+    JavaScript turned off. %>
+<%= form_with model: repair, data: { turbo: false } do |f| %>
+  <%= render "shared/error_summary", object: repair %>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :bike_id, "Bike", class: "form-label" %>
+      <%= f.collection_select :bike_id, bikes, :id, :display_name,
+            { include_blank: "Choose the bike" },
+            class: field_class(f, :bike_id, :bike, :customer, base: "form-select") %>
+      <%= field_errors(f, :bike_id, :bike, :customer) %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :status, class: "form-label" %>
+      <%= f.select :status,
+            Repair.statuses.keys.map { |status| [ status_label(status), status ] },
+            {},
+            class: field_class(f, :status, base: "form-select") %>
+      <%= field_errors(f, :status) %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :intake_staff_id, "Taken in by", class: "form-label" %>
+      <%= f.collection_select :intake_staff_id, staff_members, :id, :name,
+            { include_blank: "Choose who took it in" },
+            class: field_class(f, :intake_staff_id, :intake_staff, base: "form-select") %>
+      <%= field_errors(f, :intake_staff_id, :intake_staff) %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :mechanic_id, "Mechanic", class: "form-label" %>
+      <%= f.collection_select :mechanic_id, mechanics, :id, :name,
+            { include_blank: "Not assigned yet" },
+            class: field_class(f, :mechanic_id, :mechanic, base: "form-select") %>
+      <%= field_errors(f, :mechanic_id, :mechanic) %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :promised_on, "Promised day", class: "form-label" %>
+      <%= f.date_field :promised_on, class: field_class(f, :promised_on) %>
+      <%= field_errors(f, :promised_on) %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :quoted_at, "Quote answered at", class: "form-label" %>
+      <%= f.datetime_field :quoted_at, include_seconds: false, class: field_class(f, :quoted_at) %>
+      <%= field_errors(f, :quoted_at) %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <%= f.label :finished_at, "Finished at", class: "form-label" %>
+      <%= f.datetime_field :finished_at, include_seconds: false, class: field_class(f, :finished_at) %>
+      <%= field_errors(f, :finished_at) %>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <%= f.label :returned_at, "Returned to the customer at", class: "form-label" %>
+      <%= f.datetime_field :returned_at, include_seconds: false, class: field_class(f, :returned_at) %>
+      <%= field_errors(f, :returned_at) %>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <%= f.label :returned_by_staff_id, "Returned by", class: "form-label" %>
+      <%= f.collection_select :returned_by_staff_id, staff_members, :id, :name,
+            { include_blank: "Not returned yet" },
+            class: field_class(f, :returned_by_staff_id, :returned_by_staff, base: "form-select") %>
+      <%= field_errors(f, :returned_by_staff_id, :returned_by_staff) %>
+    </div>
+  </div>
+
+  <fieldset class="mb-4">
+    <legend class="h5">Services to charge</legend>
+    <p class="form-text mt-0">
+      Choose a service and the price charged today for each line. Lines left
+      without a service are ignored. Need more lines? Save, then edit the repair.
+    </p>
+
+    <%= f.fields_for :repair_jobs do |line| %>
+      <div class="row g-2 align-items-start border-bottom pb-2 mb-2">
+        <div class="col-md-6">
+          <%= line.label :service_id, "Service", class: "form-label small mb-1" %>
+          <%= line.select :service_id,
+                services.map { |service| [ "#{service.name} (list price #{number_to_currency(service.price)})", service.id ] },
+                { include_blank: "No service — line ignored" },
+                class: field_class(line, :service_id, :service, base: "form-select") %>
+          <%= field_errors(line, :service_id, :service) %>
+        </div>
+
+        <div class="col-md-3">
+          <%= line.label :price_charged, "Price charged", class: "form-label small mb-1" %>
+          <%= line.number_field :price_charged, step: 0.01, class: field_class(line, :price_charged) %>
+          <%= field_errors(line, :price_charged) %>
+        </div>
+
+        <div class="col-md-3 pt-md-4">
+          <% if line.object.persisted? %>
+            <div class="form-check mt-md-2">
+              <%= line.check_box :_destroy, class: "form-check-input" %>
+              <%= line.label :_destroy, "Remove this line", class: "form-check-label" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <%= f.submit class: "btn btn-primary" %>
+<% end %>

@@ -1,0 +1,7 @@
+<% content_for :title, "Edit #{@service.name_was}" %>
+
+<p><%= link_to "← Back to #{@service.name_was}", service_path(@service) %></p>
+
+<h1>Edit <%= @service.name_was %></h1>
+
+<%= render "form", service: @service %>

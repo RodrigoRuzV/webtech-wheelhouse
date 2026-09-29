@@ -1,0 +1,23 @@
+<%# The one form for a customer, rendered by new and edit. %>
+<%# data-turbo="false": the form is submitted by the browser itself, not
+    by Turbo, so a refused write (422) leaves the URL bar at the path the
+    form was posted to (/customers or /customers/:id) and a valid one follows the
+    redirect like any page. It also means the form behaves the same with
+    JavaScript turned off. %>
+<%= form_with model: customer, data: { turbo: false } do |f| %>
+  <%= render "shared/error_summary", object: customer %>
+
+  <div class="mb-3">
+    <%= f.label :name, class: "form-label" %>
+    <%= f.text_field :name, class: field_class(f, :name) %>
+    <%= field_errors(f, :name) %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :phone, class: "form-label" %>
+    <%= f.text_field :phone, autocomplete: "tel", class: field_class(f, :phone) %>
+    <%= field_errors(f, :phone) %>
+  </div>
+
+  <%= f.submit class: "btn btn-primary" %>
+<% end %>

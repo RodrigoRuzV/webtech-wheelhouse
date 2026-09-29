@@ -1,0 +1,7 @@
+<% content_for :title, "New customer" %>
+
+<p><%= link_to "&larr; Back to customers".html_safe, customers_path %></p>
+
+<h1>New customer</h1>
+
+<%= render "form", customer: @customer %>

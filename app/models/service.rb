@@ -18,7 +18,7 @@ class Service < ApplicationRecord
 
   def ensure_not_charged
     if repair_jobs.any?
-      errors.add(:base, "cannot be deleted because it has been charged on at least one repair")
+      errors.add(:base, "This service has been charged on at least one repair, so it can't be deleted")
       throw :abort
     end
   end

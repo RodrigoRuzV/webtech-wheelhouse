@@ -1,0 +1,8 @@
+<%# Drawn once, by the layout, on every page. A notice is green, anything
+    else (an alert) is red. %>
+<% flash.each do |type, message| %>
+  <div class="alert <%= type.to_s == "notice" ? "alert-success" : "alert-danger" %> alert-dismissible fade show" role="alert">
+    <%= message %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% end %>

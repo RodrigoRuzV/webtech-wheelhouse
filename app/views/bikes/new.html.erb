@@ -1,0 +1,13 @@
+<% content_for :title, "New bike" %>
+
+<p>
+  <% if @bike.customer %>
+    <%= link_to "← Back to #{@bike.customer.name}", customer_path(@bike.customer) %>
+  <% else %>
+    <%= link_to "← Back to bikes", bikes_path %>
+  <% end %>
+</p>
+
+<h1>New bike</h1>
+
+<%= render "form", bike: @bike, customers: @customers %>

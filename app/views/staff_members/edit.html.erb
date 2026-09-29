@@ -1,0 +1,7 @@
+<% content_for :title, "Edit #{@staff_member.name_was}" %>
+
+<p><%= link_to "← Back to #{@staff_member.name_was}", staff_member_path(@staff_member) %></p>
+
+<h1>Edit <%= @staff_member.name_was %></h1>
+
+<%= render "form", staff_member: @staff_member %>

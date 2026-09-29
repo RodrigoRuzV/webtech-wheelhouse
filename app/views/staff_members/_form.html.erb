@@ -1,0 +1,27 @@
+<%# The one form for a staff member, rendered by new and edit. The role
+    choices come from the enum in StaffMember. %>
+<%# data-turbo="false": the form is submitted by the browser itself, not
+    by Turbo, so a refused write (422) leaves the URL bar at the path the
+    form was posted to (/staff_members or /staff_members/:id) and a valid one follows the
+    redirect like any page. It also means the form behaves the same with
+    JavaScript turned off. %>
+<%= form_with model: staff_member, data: { turbo: false } do |f| %>
+  <%= render "shared/error_summary", object: staff_member %>
+
+  <div class="mb-3">
+    <%= f.label :name, class: "form-label" %>
+    <%= f.text_field :name, class: field_class(f, :name) %>
+    <%= field_errors(f, :name) %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :role, class: "form-label" %>
+    <%= f.select :role,
+          StaffMember.roles.keys.map { |role| [ role.humanize, role ] },
+          { include_blank: "Choose a role" },
+          class: field_class(f, :role, base: "form-select") %>
+    <%= field_errors(f, :role) %>
+  </div>
+
+  <%= f.submit class: "btn btn-primary" %>
+<% end %>

@@ -5,6 +5,12 @@
 <h1><%= @service.name %></h1>
 <p class="lead">Standard price: <%= number_to_currency(@service.price) %></p>
 
+<div class="d-flex gap-2 mb-4">
+  <%= link_to "Edit", edit_service_path(@service), class: "btn btn-outline-primary" %>
+  <%= button_to "Delete", @service, method: :delete, class: "btn btn-outline-danger",
+        form: { data: { turbo_confirm: "Delete service #{@service.name}? This can't be undone." } } %>
+</div>
+
 <h2>Charged on</h2>
 <% if @repair_jobs.any? %>
   <table class="table table-striped">

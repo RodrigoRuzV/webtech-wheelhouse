@@ -15,7 +15,7 @@ class Customer < ApplicationRecord
 
   def ensure_no_bikes
     if bikes.any?
-      errors.add(:base, "cannot be deleted because they own at least one bike")
+      errors.add(:base, "This customer owns at least one bike, so they can't be deleted")
       throw :abort
     end
   end

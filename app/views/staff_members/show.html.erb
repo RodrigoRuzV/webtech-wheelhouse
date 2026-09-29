@@ -5,6 +5,12 @@
 <h1><%= @staff_member.name %></h1>
 <p class="lead"><%= @staff_member.role.capitalize %></p>
 
+<div class="d-flex gap-2 mb-4">
+  <%= link_to "Edit", edit_staff_member_path(@staff_member), class: "btn btn-outline-primary" %>
+  <%= button_to "Delete", @staff_member, method: :delete, class: "btn btn-outline-danger",
+        form: { data: { turbo_confirm: "Delete #{@staff_member.name} from the staff? This can't be undone." } } %>
+</div>
+
 <h2>Repairs as mechanic</h2>
 <% if @mechanic_repairs.any? %>
   <table class="table table-striped">

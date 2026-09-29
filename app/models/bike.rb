@@ -10,6 +10,12 @@ class Bike < ApplicationRecord
 
   scope :by_make_and_model, -> { order(:make, :model) }
 
+  # How a bike is shown in a select: a person recognises it by make and
+  # model, and tells two identical bikes apart by the serial number.
+  def display_name
+    "#{make} #{model} (#{serial_number})"
+  end
+
   private
 
   def normalize_serial_number

@@ -1,0 +1,7 @@
+<% content_for :title, "Edit bike #{@bike.serial_number_was}" %>
+
+<p><%= link_to "← Back to bike #{@bike.serial_number_was}", bike_path(@bike) %></p>
+
+<h1>Edit bike <%= @bike.serial_number_was %></h1>
+
+<%= render "form", bike: @bike, customers: @customers %>

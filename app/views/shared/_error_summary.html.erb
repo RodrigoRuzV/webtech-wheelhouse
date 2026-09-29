@@ -1,0 +1,15 @@
+<%# Every error on the record — including the ones not attached to a column
+    and the ones coming from a repair's lines — as the sentences a person at
+    the counter reads. Rendered at the top of every form. %>
+<% if object.errors.any? %>
+  <div class="alert alert-danger" role="alert">
+    <h2 class="h6 alert-heading">
+      <%= pluralize(object.errors.count, "problem") %> kept this <%= object.model_name.human.downcase %> from being saved:
+    </h2>
+    <ul class="mb-0">
+      <% object.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

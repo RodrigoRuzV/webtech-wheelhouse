@@ -1,0 +1,8 @@
+<% content_for :title, "Edit repair" %>
+
+<p><%= link_to "← Back to the repair", repair_path(@repair) %></p>
+
+<h1>Edit repair for <%= @repair.customer.name %></h1>
+
+<%= render "form", repair: @repair, bikes: @bikes, staff_members: @staff_members,
+                   mechanics: @mechanics, services: @services %>

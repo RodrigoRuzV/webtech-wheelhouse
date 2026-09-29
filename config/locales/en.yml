@@ -29,3 +29,22 @@
 
 en:
   hello: "Hello world"
+  activerecord:
+    errors:
+      messages:
+        # The reason a restrict_with_error destroy is refused, shown in the
+        # alert after "Delete" (the default reads "Cannot delete record
+        # because dependent repairs exist").
+        restrict_dependent_destroy:
+          has_one: "It still has a %{record} on file, so it can't be deleted"
+          has_many: "It still has %{record} on file, so it can't be deleted"
+    attributes:
+      repair:
+        intake_staff: "Intake staff"
+        returned_by_staff: "Returned by"
+        promised_on: "Promised day"
+        quoted_at: "Quote answered at"
+        returned_at: "Returned at"
+      repair/repair_jobs:
+        price_charged: "Price charged"
+        service: "Service"

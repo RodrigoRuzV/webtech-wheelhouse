@@ -1,0 +1,14 @@
+<% content_for :title, "New repair" %>
+
+<p>
+  <% if @repair.bike %>
+    <%= link_to "← Back to bike #{@repair.bike.serial_number}", bike_path(@repair.bike) %>
+  <% else %>
+    <%= link_to "← Back to repairs", repairs_path %>
+  <% end %>
+</p>
+
+<h1>New repair</h1>
+
+<%= render "form", repair: @repair, bikes: @bikes, staff_members: @staff_members,
+                   mechanics: @mechanics, services: @services %>

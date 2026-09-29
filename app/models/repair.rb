@@ -4,7 +4,7 @@ class Repair < ApplicationRecord
   belongs_to :intake_staff, class_name: "StaffMember"
   belongs_to :mechanic, class_name: "StaffMember", optional: true
   belongs_to :returned_by_staff, class_name: "StaffMember", optional: true
-  has_many :repair_jobs, dependent: :destroy
+  has_many :repair_jobs, dependent: :destroy, inverse_of: :repair
   has_many :services, through: :repair_jobs
 
   enum :status, {
@@ -15,7 +15,17 @@ class Repair < ApplicationRecord
     declined_pickup_pending: "declined_pickup_pending",
     ready_for_pickup: "ready_for_pickup",
     picked_up: "picked_up"
-  }
+  }, validate: { allow_nil: true }
+
+  # Lab 8: a repair's lines are written through the repair's own form, in
+  # the same save and the same transaction. A line whose service is left
+  # blank is one of the spare empty lines and is ignored; an existing line
+  # can be removed by ticking its "Remove" box (_destroy).
+  accepts_nested_attributes_for :repair_jobs,
+    allow_destroy: true,
+    reject_if: ->(attributes) { attributes["service_id"].blank? }
+
+  before_validation :take_customer_from_bike
 
   validates :status, presence: true
 
@@ -39,10 +49,24 @@ class Repair < ApplicationRecord
 
   private
 
-  def promised_and_returned_not_before_drop_off
-    return unless created_at
+  # The form asks for the bike, not the customer: the customer who brings a
+  # repair in is the bike's owner at that moment. repairs.customer_id keeps
+  # that snapshot, so later changes of owner don't rewrite old repairs. It
+  # is only recomputed when a new repair has none, or when the bike of an
+  # existing repair is changed.
+  def take_customer_from_bike
+    return if bike.nil?
 
-    drop_off_day = created_at.to_date
+    if new_record? ? customer.nil? : will_save_change_to_bike_id?
+      self.customer = bike.customer
+    end
+  end
+
+  def promised_and_returned_not_before_drop_off
+    # A repair being created right now has no created_at yet: its drop-off
+    # day is today. (Before Lab 8 this check was skipped on create, which
+    # let the new form save a promised day in the past.)
+    drop_off_day = (created_at || Time.current).to_date
 
     if promised_on.present? && promised_on < drop_off_day
       errors.add(:promised_on, "cannot be before the day the bike was dropped off")

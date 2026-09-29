@@ -23,5 +23,14 @@ module WebtechWheelhouse
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Lab 8: Rails wraps every field with errors in
+    # <div class="field_with_errors">, which sits between Bootstrap's
+    # .form-label, .form-control and .invalid-feedback and breaks the form's
+    # layout. Our forms mark invalid fields themselves with Bootstrap's
+    # .is-invalid (see FormErrorsHelper), so the wrapper is turned off and
+    # each tag is returned untouched. See "Customizing the field_with_errors
+    # wrapper" in the Action View Form Helpers guide.
+    config.action_view.field_error_proc = proc { |html_tag, _instance| html_tag }
   end
 end
