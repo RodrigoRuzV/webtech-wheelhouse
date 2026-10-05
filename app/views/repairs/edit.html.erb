@@ -6,3 +6,9 @@
 
 <%= render "form", repair: @repair, bikes: @bikes, staff_members: @staff_members,
                    mechanics: @mechanics, services: @services %>
+
+<%# Outside the form: each Remove button is a form of its own. %>
+<section class="mt-5">
+  <h2 class="h5">Intake photos</h2>
+  <%= render "photo_gallery", repair: @repair, variant: :thumb %>
+</section>

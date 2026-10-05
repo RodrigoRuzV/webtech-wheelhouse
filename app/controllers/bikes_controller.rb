@@ -9,7 +9,7 @@ class BikesController < ApplicationController
   end
 
   def show
-    @repairs = @bike.repairs.includes(:customer).newest_first
+    @repairs = with_photos_and_diagnosis(@bike.repairs.includes(:customer)).newest_first
   end
 
   # Reached from a customer's page as /bikes/new?customer_id=…, so the

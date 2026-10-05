@@ -84,6 +84,35 @@
     </div>
   </div>
 
+  <%# Lab 9: the mechanic's diagnosis, as rich text. Optional. %>
+  <div class="mb-3">
+    <%= f.label :diagnosis, class: "form-label" %>
+    <%= f.rich_textarea :diagnosis, class: field_class(f, :diagnosis) %>
+    <%= field_errors(f, :diagnosis) %>
+  </div>
+
+  <%# Lab 9: intake photos. Assigning photos replaces the list, so the
+      photos the repair already has are sent back as hidden signed ids and
+      the files chosen here are added to them. Saving without choosing a
+      file sends only the hidden ids, and the photos stay as they were. The
+      browser empties a file field when a refused form is shown again, so
+      those files are chosen again; the other fields keep their values. %>
+  <div class="mb-3">
+    <% repair.photos.select(&:persisted?).each do |photo| %>
+      <%= f.hidden_field :photos, multiple: true, value: photo.signed_id, id: nil %>
+    <% end %>
+    <%= f.label :photos, "Add intake photos", class: "form-label" %>
+    <%= f.file_field :photos, multiple: true,
+          accept: Repair::PHOTO_CONTENT_TYPES.join(","),
+          class: field_class(f, :photos),
+          aria: { describedby: "repair_photos_help" } %>
+    <%= field_errors(f, :photos) %>
+    <div id="repair_photos_help" class="form-text">
+      <%= Repair::PHOTO_TYPES_IN_WORDS %>, up to <%= Repair::PHOTO_MAX_SIZE / 1.megabyte %> MB each.
+      You can choose several at once<%= "; they are added to the photos the repair already has" if repair.persisted? %>.
+    </div>
+  </div>
+
   <fieldset class="mb-4">
     <legend class="h5">Services to charge</legend>
     <p class="form-text mt-0">

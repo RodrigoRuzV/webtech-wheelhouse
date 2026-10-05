@@ -1,6 +1,6 @@
 <% content_for :title, "Repair for #{@repair.customer.name}" %>
 
-<p><%= link_to "&larr; Back to repairs".html_safe, repairs_path %></p>
+<p><%= link_to "← Back to repairs", repairs_path %></p>
 
 <h1>Repair for <%= link_to @repair.customer.name, @repair.customer %></h1>
 <p class="lead">
@@ -11,7 +11,7 @@
 <div class="d-flex gap-2 mb-4">
   <%= link_to "Edit", edit_repair_path(@repair), class: "btn btn-outline-primary" %>
   <%= button_to "Delete", @repair, method: :delete, class: "btn btn-outline-danger",
-        form: { data: { turbo_confirm: "Delete the repair for #{@repair.customer.name}'s bike #{@repair.bike.serial_number}? Its service lines are deleted with it." } } %>
+        form: { data: { turbo_confirm: "Delete the repair for #{@repair.customer.name}'s bike #{@repair.bike.serial_number}? Its service lines, photos and diagnosis are deleted with it." } } %>
 </div>
 
 <table class="table table-borderless w-auto">
@@ -53,6 +53,19 @@
     </tr>
   </tbody>
 </table>
+
+<h2>Diagnosis</h2>
+<%# Printed through Action Text, which strips any script a person wrote. %>
+<% if @repair.diagnosis.present? %>
+  <div class="card card-body mb-4"><%= @repair.diagnosis %></div>
+<% else %>
+  <p class="mb-4">No diagnosis yet.</p>
+<% end %>
+
+<h2>Intake photos</h2>
+<div class="mb-4">
+  <%= render "photo_gallery", repair: @repair, variant: :large %>
+</div>
 
 <h2>Services charged</h2>
 <% if @repair_jobs.any? %>

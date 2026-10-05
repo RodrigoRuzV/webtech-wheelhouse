@@ -1,6 +1,6 @@
 <% content_for :title, @service.name %>
 
-<p><%= link_to "&larr; Back to services".html_safe, services_path %></p>
+<p><%= link_to "← Back to services", services_path %></p>
 
 <h1><%= @service.name %></h1>
 <p class="lead">Standard price: <%= number_to_currency(@service.price) %></p>

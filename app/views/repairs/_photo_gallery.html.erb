@@ -1,0 +1,30 @@
+<%# Lab 9: the intake photos of one repair, each linking to its original
+    and with its own Remove button. Rendered on the repair's page (the :large
+    variant) and on its edit page (the :thumb variant), never inside the
+    repair's form: a button_to is a form of its own.
+    Only saved photos are listed: after a refused upload the repair still
+    holds the refused files in memory, and they are not its photos. %>
+<% photos = repair.photos.select(&:persisted?) %>
+<% if photos.any? %>
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+    <% photos.each.with_index(1) do |photo, position| %>
+      <div class="col">
+        <figure class="figure mb-0">
+          <%= link_to photo do %>
+            <%= image_tag photo.variant(variant),
+                  alt: intake_photo_alt(repair, position, photos.size),
+                  class: "figure-img img-fluid rounded border" %>
+          <% end %>
+          <figcaption class="figure-caption d-flex justify-content-between align-items-center gap-2">
+            <span>Photo <%= position %> of <%= photos.size %></span>
+            <%= button_to "Remove", repair_photo_path(repair, photo), method: :delete,
+                  class: "btn btn-sm btn-outline-danger",
+                  form: { data: { turbo_confirm: "Remove photo #{position} (“#{photo.filename}”) of this repair? The other photos stay." } } %>
+          </figcaption>
+        </figure>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p>No intake photos for this repair.</p>
+<% end %>

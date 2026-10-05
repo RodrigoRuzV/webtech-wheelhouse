@@ -13,7 +13,7 @@ class RepairsController < ApplicationController
   def index
     # Newest first: the counter and the mechanics care about what just
     # came in and what is still moving, not what happened first overall.
-    @repairs = Repair.includes(:bike, :customer).newest_first
+    @repairs = with_photos_and_diagnosis(Repair.includes(:bike, :customer)).newest_first
   end
 
   def show
@@ -63,7 +63,9 @@ class RepairsController < ApplicationController
   private
 
   def set_repair
-    @repair = Repair.includes(:bike, :customer, :intake_staff, :mechanic, :returned_by_staff, repair_jobs: :service).find(params[:id])
+    @repair = with_photos_and_diagnosis(
+      Repair.includes(:bike, :customer, :intake_staff, :mechanic, :returned_by_staff, repair_jobs: :service)
+    ).find(params[:id])
   end
 
   # Loaded once per request, so every select on the page (one per line for
@@ -86,6 +88,9 @@ class RepairsController < ApplicationController
     params.expect(repair: [
       :bike_id, :intake_staff_id, :mechanic_id, :status,
       :promised_on, :quoted_at, :finished_at, :returned_at, :returned_by_staff_id,
+      # Lab 9. photos is a list: the signed ids of the photos the repair
+      # already has (hidden fields of the form) plus the files just chosen.
+      :diagnosis, photos: [],
       repair_jobs_attributes: [ [ :id, :service_id, :price_charged, :_destroy ] ]
     ])
   end

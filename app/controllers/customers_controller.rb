@@ -7,7 +7,7 @@ class CustomersController < ApplicationController
 
   def show
     @bikes = @customer.bikes.by_make_and_model
-    @repairs = @customer.repairs.includes(:bike).newest_first
+    @repairs = with_photos_and_diagnosis(@customer.repairs.includes(:bike)).newest_first
   end
 
   def new

@@ -7,7 +7,10 @@ Rails.application.routes.draw do
   # no routes of its own — its rows are written through the repair's form.
   resources :customers
   resources :bikes
-  resources :repairs
+  resources :repairs do
+    # Lab 9: one intake photo is removed on its own (DELETE, never GET).
+    resources :photos, only: :destroy, controller: "repair_photos"
+  end
   resources :services
   resources :staff_members
 

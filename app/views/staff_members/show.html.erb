@@ -1,6 +1,6 @@
 <% content_for :title, @staff_member.name %>
 
-<p><%= link_to "&larr; Back to staff".html_safe, staff_members_path %></p>
+<p><%= link_to "← Back to staff", staff_members_path %></p>
 
 <h1><%= @staff_member.name %></h1>
 <p class="lead"><%= @staff_member.role.capitalize %></p>
@@ -16,10 +16,12 @@
   <table class="table table-striped">
     <thead>
       <tr>
+        <th scope="col"><span class="visually-hidden">Intake photo</span></th>
         <th scope="col">Bike</th>
         <th scope="col">Customer</th>
         <th scope="col">Status</th>
         <th scope="col">Promised</th>
+        <th scope="col">Diagnosis</th>
       </tr>
     </thead>
     <tbody>

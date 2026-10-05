@@ -45,6 +45,8 @@ en:
         promised_on: "Promised day"
         quoted_at: "Quote answered at"
         returned_at: "Returned at"
+        # "Photo “brakes.pdf” is not a JPEG, PNG, HEIC or WebP image"
+        photos: "Photo"
       repair/repair_jobs:
         price_charged: "Price charged"
         service: "Service"

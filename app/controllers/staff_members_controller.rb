@@ -8,7 +8,7 @@ class StaffMembersController < ApplicationController
   end
 
   def show
-    @mechanic_repairs = @staff_member.mechanic_repairs.includes(:bike, :customer).newest_first
+    @mechanic_repairs = with_photos_and_diagnosis(@staff_member.mechanic_repairs.includes(:bike, :customer)).newest_first
   end
 
   def new

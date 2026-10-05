@@ -1,6 +1,32 @@
+<%# One row of a list of repairs: the repairs index, a bike's page, a
+    customer's page and a mechanic's page all render this partial, and their
+    controllers preload what it reads (with_photos_and_diagnosis).
+    Lab 9: the row starts with the :thumb variant of one intake photo (never
+    the original) and ends with the beginning of the diagnosis as plain text.
+    A repair with no photos gets an empty slot of the same size, so its row
+    stays aligned with the others. %>
+<% photo = repair.photos.first %>
 <tr class="<%= "table-danger" if repair.overdue? %>">
+  <td class="repair-thumb-cell">
+    <% if photo %>
+      <%= link_to repair do %>
+        <%= image_tag photo.variant(:thumb),
+              alt: intake_photo_alt(repair, 1, repair.photos.size),
+              width: Repair::THUMB_SIZE, height: Repair::THUMB_SIZE,
+              class: "rounded border", loading: "lazy" %>
+      <% end %>
+    <% else %>
+      <div class="repair-thumb-empty rounded border"
+           style="width: <%= Repair::THUMB_SIZE %>px; height: <%= Repair::THUMB_SIZE %>px;">
+        <span class="visually-hidden">No intake photos</span>
+      </div>
+    <% end %>
+  </td>
   <td><%= link_to "#{repair.bike.make} #{repair.bike.model}", repair.bike %></td>
   <td><%= link_to repair.customer.name, repair.customer %></td>
   <td><%= link_to status_label(repair.status), repair %></td>
   <td><%= repair.promised_on&.strftime("%b %-d, %Y") || "—" %></td>
+  <td class="diagnosis-excerpt text-truncate text-body-secondary">
+    <%= diagnosis_excerpt(repair) %>
+  </td>
 </tr>

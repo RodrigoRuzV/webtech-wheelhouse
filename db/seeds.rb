@@ -7,13 +7,25 @@
 # attribute rather than an association shorthand.
 #
 # Idempotent: the six tables this file owns are cleared before being
-# rebuilt, so running `bin/rails db:seed` twice leaves the same number of
-# rows behind. Every write uses a bang method, so a failed insert raises
+# rebuilt, and so are the tables of Active Storage (attachments, variant
+# records, blobs and their files in storage/) and of Action Text (Lab 9),
+# so running `bin/rails db:seed` twice leaves the same number of rows
+# behind in every table. Every write uses a bang method, so a failed insert raises
 # instead of silently leaving fewer rows than intended. Every date and
 # time is written relative to `Time.current` / `Date.current`, so a
 # repair that is overdue today is still overdue whenever this runs again.
 
 ActiveRecord::Base.transaction do
+  # Lab 9: the rich texts and the files go first. delete_all skips
+  # callbacks, so nothing would remove them along with the repairs. The
+  # attachments and variant records are deleted before the blobs (their
+  # foreign keys point to them); each blob is purged so its file and its
+  # variants' files leave storage/ too.
+  ActionText::RichText.delete_all
+  ActiveStorage::Attachment.delete_all
+  ActiveStorage::VariantRecord.delete_all
+  ActiveStorage::Blob.find_each(&:purge)
+
   RepairJob.delete_all
   Repair.delete_all
   Bike.delete_all
@@ -254,8 +266,117 @@ ActiveRecord::Base.transaction do
     finished_at: now - 4.days, returned_at: now - 3.days, returned_by_staff_id: valentina.id
   )
   add_jobs.call(r17, [ "Bearing service", nil ])
+
+  # ---------------------------------------------------------------------
+  # Lab 9 — intake photos. The files are the seven photos committed in
+  # db/seeds/ (bike-01.jpg … bike-07.jpg, from Unsplash, see the README).
+  # The same file goes to several repairs, but every attachment gets a blob
+  # of its own, so removing a photo from one repair removes its blob row
+  # too and never touches another repair's photo.
+  #
+  # Every repair has photos except two: R8, a same-day flat fixed at the
+  # counter, and R10, from before the shop took photos. R9, the overdue
+  # frame check, has five.
+  # ---------------------------------------------------------------------
+  seed_photo = lambda do |number|
+    filename = format("bike-%02d.jpg", number)
+    { io: StringIO.new(File.binread(Rails.root.join("db/seeds", filename))),
+      filename: filename, content_type: "image/jpeg" }
+  end
+
+  attach_photos = lambda do |repair, *numbers|
+    repair.photos.attach(numbers.map { |number| seed_photo.call(number) })
+  end
+
+  attach_photos.call(r1,  1, 2)
+  attach_photos.call(r2,  2)
+  attach_photos.call(r3,  3, 4)
+  attach_photos.call(r4,  4)
+  attach_photos.call(r5,  5, 6)
+  attach_photos.call(r6,  6)
+  attach_photos.call(r7,  7)
+  attach_photos.call(r9,  1, 3, 5, 7, 2) # five photos
+  attach_photos.call(r11, 3)
+  attach_photos.call(r12, 4, 5)
+  attach_photos.call(r13, 5)
+  attach_photos.call(r14, 6, 7)
+  attach_photos.call(r15, 7)
+  attach_photos.call(r16, 1)
+  attach_photos.call(r17, 2, 3)
+
+  # ---------------------------------------------------------------------
+  # Lab 9 — diagnoses, as the HTML Trix writes (bold, lists, a link and a
+  # quote here and there). The three repairs still in "dropped_off" (R1,
+  # R12, R16) have just been taken in and have none.
+  # ---------------------------------------------------------------------
+  diagnoses = {
+    r2 => <<~HTML,
+      <div><strong>Rear brake rubbing.</strong> Caliper is off-centre and the pads are glazed.</div>
+      <ul><li>Re-centre the rear caliper</li><li>Sand the pads, check rotor for warping</li></ul>
+    HTML
+    r3 => <<~HTML,
+      <div><strong>Grinding from the front hub</strong> and a visible wobble in the rear wheel.</div>
+      <ul><li>Front hub bearings worn — replace</li><li>Rear wheel 3 mm out of true</li></ul>
+      <blockquote>Customer says the noise started after a rainy commute.</blockquote>
+    HTML
+    r4 => <<~HTML,
+      <div><strong>General wear, approved in full.</strong></div>
+      <ul><li>Chain stretched past 0.75 %</li><li>Shift cables frayed at the derailleur</li><li>Gears need indexing after the cable swap</li></ul>
+    HTML
+    r5 => <<~HTML,
+      <div><strong>Needs a full overhaul</strong> — the customer declined the quote.</div>
+      <ul><li>Bottom bracket loose</li><li>Headset pitted</li><li>Both wheels out of true</li></ul>
+    HTML
+    r6 => <<~HTML,
+      <div><strong>Brakes squealing and skipping gears.</strong></div>
+      <ol><li>Replace front and rear pads</li><li>Tune the rear derailleur</li></ol>
+    HTML
+    r7 => <<~HTML,
+      <div><strong>Chain snapped on a climb</strong>; rear tyre worn to the casing.</div>
+      <ul><li>New chain</li><li>New rear tyre</li></ul>
+    HTML
+    r8 => <<~HTML,
+      <div><strong>Flat front tyre.</strong> Thorn in the tread, tube patched at the counter.</div>
+      <ul><li>No other damage found</li></ul>
+    HTML
+    r9 => <<~HTML,
+      <div><strong>Crash damage — check the frame before anything else.</strong></div>
+      <ul><li>Down tube scraped, no cracks visible</li><li>Rear dropout possibly bent</li><li>Bottom bracket bearings rough</li></ul>
+      <div>Waiting on the alignment gauge, see <a href="https://www.parktool.com/en-us/blog/repair-help">Park Tool's repair guide</a>.</div>
+    HTML
+    r10 => <<~HTML,
+      <div><strong>Yearly tune-up.</strong></div>
+      <ul><li>Adjust brakes and gears</li><li>Lube chain</li></ul>
+    HTML
+    r11 => <<~HTML,
+      <div><strong>Spongy rear brake lever.</strong> Air in the hydraulic line.</div>
+      <ul><li>Bleed the rear brake</li><li>Check the hose for leaks</li></ul>
+    HTML
+    r13 => <<~HTML,
+      <div><strong>Rear wheel wobbles</strong> after hitting a pothole.</div>
+      <ul><li>True the rear wheel</li><li>Check spoke tension all round</li></ul>
+    HTML
+    r14 => <<~HTML,
+      <div><strong>Fork sticks</strong> and the front rotor is scored.</div>
+      <ul><li>Service the suspension fork</li><li>Replace the front rotor</li></ul>
+      <blockquote>Quote sent by phone, waiting on Matías.</blockquote>
+    HTML
+    r15 => <<~HTML,
+      <div><strong>One broken spoke</strong> on the rear wheel, drive side.</div>
+      <ul><li>Replace the spoke and re-true</li></ul>
+    HTML
+    r17 => <<~HTML
+      <div><strong>Creaking under load.</strong></div>
+      <ul><li>Bottom bracket bearings dry — regrease</li><li>Pedal threads checked, fine</li></ul>
+    HTML
+  }
+
+  diagnoses.each { |repair, html| repair.update!(diagnosis: html) }
 end
 
 puts "Seeded #{Service.count} services, #{StaffMember.count} staff, " \
      "#{Customer.count} customers, #{Bike.count} bikes, " \
-     "#{Repair.count} repairs, #{RepairJob.count} repair jobs."
+     "#{Repair.count} repairs, #{RepairJob.count} repair jobs, " \
+     "#{ActiveStorage::Attachment.count} attachments, #{ActiveStorage::Blob.count} blobs, " \
+     "#{ActiveStorage::VariantRecord.count} variant records, " \
+     "#{ActionText::RichText.count} rich texts."

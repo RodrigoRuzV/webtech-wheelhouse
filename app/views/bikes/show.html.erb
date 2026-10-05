@@ -1,6 +1,6 @@
 <% content_for :title, "#{@bike.make} #{@bike.model}" %>
 
-<p><%= link_to "&larr; Back to bikes".html_safe, bikes_path %></p>
+<p><%= link_to "← Back to bikes", bikes_path %></p>
 
 <h1><%= @bike.make %> <%= @bike.model %></h1>
 <p class="lead">
@@ -22,10 +22,12 @@
   <table class="table table-striped">
     <thead>
       <tr>
+        <th scope="col"><span class="visually-hidden">Intake photo</span></th>
         <th scope="col">Bike</th>
         <th scope="col">Customer</th>
         <th scope="col">Status</th>
         <th scope="col">Promised</th>
+        <th scope="col">Diagnosis</th>
       </tr>
     </thead>
     <tbody>

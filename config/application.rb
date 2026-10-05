@@ -32,5 +32,12 @@ module WebtechWheelhouse
     # each tag is returned untouched. See "Customizing the field_with_errors
     # wrapper" in the Action View Form Helpers guide.
     config.action_view.field_error_proc = proc { |html_tag, _instance| html_tag }
+
+    # Lab 9: Active Storage serves files and variants itself (proxy mode)
+    # instead of redirecting to a signed URL that expires in 5 minutes. The
+    # proxied URL of a variant never changes and is cached by the browser
+    # for good, so a reload never asks for an image again; with redirects,
+    # Safari kept the expired redirect and showed broken images on reload.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
   end
 end

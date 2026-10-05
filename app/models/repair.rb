@@ -7,6 +7,39 @@ class Repair < ApplicationRecord
   has_many :repair_jobs, dependent: :destroy, inverse_of: :repair
   has_many :services, through: :repair_jobs
 
+  # Lab 9: the photos taken when the bike came in. Any number of them, as
+  # rows in Active Storage's tables (repairs gets no column). Destroying a
+  # repair deletes its attachment rows in the same transaction, and
+  # dependent: :purge_later (Active Storage's default, written out here)
+  # then purges each blob with its variants and files in a background job.
+  # (:purge_later and false are the only values Active Storage acts on.)
+  #
+  # The two named variants are the only place their dimensions are written.
+  # :thumb fills an exact square, cropping the longer side, so every
+  # thumbnail in a list measures the same and none is stretched; :large is
+  # shrunk to fit inside the box and keeps its proportions.
+  THUMB_SIZE = 80 # px, square; also the size of the empty slot of a row without photos
+  LARGE_SIZE = 1000 # px, the longest side at most
+
+  has_many_attached :photos, dependent: :purge_later do |attachable|
+    attachable.variant :thumb, resize_to_fill: [ THUMB_SIZE, THUMB_SIZE ]
+    attachable.variant :large, resize_to_limit: [ LARGE_SIZE, LARGE_SIZE ]
+  end
+
+  # Lab 9: the mechanic's diagnosis, as rich text in action_text_rich_texts
+  # (again no column on repairs). Optional, and removed with the repair.
+  has_rich_text :diagnosis
+
+  # What the shop's phones produce: JPEG and HEIC/HEIF (iPhone), PNG
+  # (screenshots) and WebP (some Android cameras). Anything else (a PDF, a
+  # video, an SVG) is refused. The type is the one Active Storage detects
+  # from the file's own bytes, not the one the browser claims.
+  PHOTO_CONTENT_TYPES = %w[image/jpeg image/png image/heic image/heif image/webp].freeze
+  PHOTO_TYPES_IN_WORDS = "JPEG, PNG, HEIC or WebP"
+  # A full-resolution phone photo is 2–8 MB; 10 MB leaves room for that and
+  # still stops a video or an uncompressed camera file.
+  PHOTO_MAX_SIZE = 10.megabytes
+
   enum :status, {
     dropped_off: "dropped_off",
     diagnosing: "diagnosing",
@@ -31,6 +64,7 @@ class Repair < ApplicationRecord
 
   validate :promised_and_returned_not_before_drop_off
   validate :answer_recorded_for_states_after_quote
+  validate :photos_are_images_within_size_limit
 
   scope :newest_first, -> { order(created_at: :desc) }
   scope :open, -> { where(returned_at: nil) }
@@ -74,6 +108,23 @@ class Repair < ApplicationRecord
 
     if returned_at.present? && returned_at.to_date < drop_off_day
       errors.add(:returned_at, "cannot be before the day the bike was dropped off")
+    end
+  end
+
+  # One message per refused file, naming it. These are model validations,
+  # so they hold for any request, with or without the form's file picker.
+  # As with any failed save, nothing of a refused request is attached.
+  def photos_are_images_within_size_limit
+    photos.each do |photo|
+      blob = photo.blob
+
+      unless blob.content_type.in?(PHOTO_CONTENT_TYPES)
+        errors.add(:photos, "“#{blob.filename}” is not a #{PHOTO_TYPES_IN_WORDS} image")
+      end
+
+      if blob.byte_size > PHOTO_MAX_SIZE
+        errors.add(:photos, "“#{blob.filename}” is larger than the #{PHOTO_MAX_SIZE / 1.megabyte} MB limit")
+      end
     end
   end
 
