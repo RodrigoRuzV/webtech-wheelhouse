@@ -101,6 +101,39 @@ Table repair_jobs {
 - **`bikes.serial_number` is normalised (`strip` + `upcase`) in a `before_validation` callback**, so `" wtu123 "` and `"WTU123"` are the same bike for the unique index and the uniqueness validation; `services.name` gets the same `strip` treatment.
 - **Every `index` and `show` eager-loads what its view renders**, via `includes` in the controller — no change to the views themselves.
 
+## Changes since Lab 7
+
+No change to the schema: Lab 8 adds no migration. What changed is how records are written.
+
+Every record can be created, edited and deleted from the browser:
+
+- **One form per resource** (`app/views/<resource>/_form.html.erb`), built with `form_with` bound to the record and shared by `new` and `edit`. Every `belongs_to` is a select that shows the parent by name; a repair's state is a select built from the enum, and so is a staff member's role.
+- **Strong parameters**: each controller has one private `<resource>_params` method using `params.expect`. A request with no key for the resource answers `400 Bad Request`.
+- **A repair's form writes two tables** in one save through `accepts_nested_attributes_for :repair_jobs`: each line picks a service and the price charged that day. It works without JavaScript — a new repair offers 3 empty lines and every edit adds 2 more (save and edit again to add more); a line left without a service is ignored, and an existing line is removed with its "Remove this line" box. The repair's customer isn't asked for: it's taken from the bike's owner.
+- **After a valid write** the app redirects to the record (or to the index after a delete) with a flash message naming it, drawn once by the layout.
+- **After a refused write** the same form is rendered again with status `422`, the typed values kept, a summary of every error at the top and each invalid field marked with Bootstrap's `is-invalid` state. Rails' `field_with_errors` wrapper is turned off in `config/initializers/field_error_proc.rb`.
+- **Deleting** is a button on every record's page that asks for confirmation first. A customer who owns a bike, a service already charged on a repair, a bike with repairs and a staff member with repairs refuse to be deleted, and the page says why.
+- Bikes can be added from a customer's page and repairs taken in from a bike's page, with the parent already chosen.
+
+## Changes since Lab 8
+
+Lab 9 brings back the two things Lab 5 postponed — the intake photos and the written diagnosis — but not as they were drawn in Lab 3. **This supersedes three statements above, which are left as they were written at the time:** the note under the DBML ("`photos` … is not in the schema yet"), the lines "`photos` removed for now" and "`repairs.diagnosis` removed for now" in *Changes since Lab 3*, and the line under the traceability table ("`photos` (user story 3) isn't a table yet").
+
+- **No `photos` table of our own, and no `repairs.diagnosis` column.** Lab 3 drew `photos (repair_id, image_url)` and a `diagnosis` column on `repairs`. Neither exists: `repairs` gets **no new column**.
+- **The photos live in Active Storage's three tables**, created by `bin/rails active_storage:install`: `active_storage_blobs` (one row per file: key, filename, content type, size, checksum), `active_storage_attachments` (the polymorphic join: `record_type = 'Repair'`, `record_id`, `name = 'photos'`, `blob_id`) and `active_storage_variant_records` (one row per generated thumbnail). `Repair` declares `has_many_attached :photos`, so a repair still has many photos, as user story 3 asked, and each photo still belongs to one repair — through `active_storage_attachments.record_id` instead of a `photos.repair_id`. `image_url` is gone: the URL is generated from the blob, never stored.
+- **The diagnosis lives in Action Text's table** `action_text_rich_texts` (`record_type = 'Repair'`, `record_id`, `name = 'diagnosis'`, `body`), created by `bin/rails action_text:install`. `Repair` declares `has_rich_text :diagnosis`. It is formatted text (bold, lists, links, quotes), not the plain string Lab 3 drew.
+- **These four tables belong to Rails, not to the shop's domain**, so they are not added to the diagram above: the diagram keeps the domain entities. They appear in `db/schema.rb`.
+- **Traceability:** the intake photos answer user story 3, as the `photos` table did in Lab 3; the diagnosis is what the mechanic writes while the repair is `diagnosing` (see the lifecycle below).
+
+A repair carries the photos taken when the bike came in and the mechanic's diagnosis, as formatted text. Neither is a column of `repairs`: the photos live in Active Storage's tables and the diagnosis in Action Text's.
+
+- **Photos** (`has_many_attached :photos` on `Repair`) are chosen in the repair's form, several at once. On edit, the files chosen are **added** to the photos the repair has (the form sends the existing ones back as hidden signed ids); saving without choosing a file leaves them as they were.
+- **Accepted files:** JPEG, PNG, HEIC/HEIF and WebP — what the shop's phones and screenshots produce — up to **10 MB** each. Both rules are validations on `Repair`, checked against the type Active Storage detects from the file's bytes (not its name or the browser's claim). A refused upload answers `422`, names the file under the field, and attaches **none** of the files sent with it.
+- **Removing a photo**: each photo on the repair's page and on its edit page has a *Remove* button (a `DELETE` with a confirmation). It purges that photo's attachment and blob and leaves the others. Destroying a repair purges its photos and deletes its diagnosis.
+- **Thumbnails**: two named variants, declared in `app/models/repair.rb` and nowhere else — `:thumb`, an 80 × 80 square crop for the rows of every list of repairs, and `:large`, at most 1000 px, for the repair's page. Lists never download an original; clicking a photo opens it. Files are served through Active Storage's proxy routes (`config/application.rb`), so a variant's URL never expires and the browser caches it.
+- **Diagnosis** (`has_rich_text :diagnosis`): written in the Trix editor, printed on the repair's page with its formatting through Action Text, and shown in each row as the first 60 characters of its plain text. It is optional. Nothing written by a person is printed with `raw` or `html_safe`; Action Text strips scripts and event handlers.
+- **Queries**: every list of repairs and the repair's page preload the photos, their variants and the diagnosis in the controller (`with_attached_photos`, `with_rich_text_diagnosis_and_embeds`), so the number of queries doesn't depend on the number of repairs or photos.
+
 ## Lifecycle
 
 `repairs.status` is the lifecycle of a single repair, from the bike arriving to the bike leaving.
