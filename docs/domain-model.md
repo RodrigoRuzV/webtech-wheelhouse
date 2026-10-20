@@ -134,6 +134,14 @@ A repair carries the photos taken when the bike came in and the mechanic's diagn
 - **Diagnosis** (`has_rich_text :diagnosis`): written in the Trix editor, printed on the repair's page with its formatting through Action Text, and shown in each row as the first 60 characters of its plain text. It is optional. Nothing written by a person is printed with `raw` or `html_safe`; Action Text strips scripts and event handlers.
 - **Queries**: every list of repairs and the repair's page preload the photos, their variants and the diagnosis in the controller (`with_attached_photos`, `with_rich_text_diagnosis_and_embeds`), so the number of queries doesn't depend on the number of repairs or photos.
 
+## Changes since Lab 9
+
+Lab 10 adds a JSON API under `/api/v1` for two programs that are not a browser: the shop's website (the price list, public) and its accounting program (the repairs, with a token). **The schema and the models do not change**: no migration, no new column, no change to any model. The API reads the same entities through its own controllers (`app/controllers/api/v1/`), and every page of the application works as before.
+
+- **Three keys that are not columns** travel in the documents, computed in the API's controllers: a service's `repairs_count` (on how many repairs it was charged), and a repair's `total`, `overdue` (both already methods of `Repair`) and `customer_answer` — the customer's answer to the quote, read from the lifecycle below (`pending` while `awaiting_approval`, `declined` after `declined_pickup_pending`, `approved` when the quoted work went ahead, `null` when no quote was needed).
+- **No foreign key leaves the application**: the bike, the customer's name and the lines travel inside the repair. The customer's phone, the staff, the diagnosis and the photos are left out of the API on purpose.
+- The details — routes, documents, errors and decisions — are in [`docs/api.md`](api.md).
+
 ## Lifecycle
 
 `repairs.status` is the lifecycle of a single repair, from the bike arriving to the bike leaving.

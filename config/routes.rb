@@ -16,4 +16,14 @@ Rails.application.routes.draw do
 
   get "visiting-the-workshop", to: "pages#visiting", as: :visiting
   get "about", to: "pages#about", as: :about
+
+  # Lab 10: the JSON API, for programs that are not a browser. The version
+  # is a segment of the path, and everything under /api/v1 answers JSON.
+  # No new and no edit: a program does not need a form.
+  namespace :api do
+    namespace :v1, defaults: { format: :json } do
+      resources :services, only: %i[index show create]
+      resources :repairs, only: %i[index show]
+    end
+  end
 end
