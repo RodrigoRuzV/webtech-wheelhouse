@@ -5,6 +5,9 @@
 <h1><%= @service.name %></h1>
 <p class="lead">Standard price: <%= number_to_currency(@service.price) %></p>
 
+<%# Lab 11: the page is open; editing and deleting need a session, and so
+    does the list of repairs it was charged on. %>
+<% if authenticated? %>
 <div class="d-flex gap-2 mb-4">
   <%= link_to "Edit", edit_service_path(@service), class: "btn btn-outline-primary" %>
   <%= button_to "Delete", @service, method: :delete, class: "btn btn-outline-danger",
@@ -31,4 +34,5 @@
   </table>
 <% else %>
   <p>This service hasn't been charged on any repair yet.</p>
+<% end %>
 <% end %>

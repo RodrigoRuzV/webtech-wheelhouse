@@ -1,4 +1,9 @@
 class ServicesController < ApplicationController
+  # Lab 11: the wall list is the one public part of the site. Its list and
+  # the page of each service are open; creating, editing and deleting a
+  # service still need a session.
+  allow_unauthenticated_access only: %i[index show]
+
   before_action :set_service, only: %i[show edit update destroy]
 
   def index
@@ -6,7 +11,9 @@ class ServicesController < ApplicationController
   end
 
   def show
-    @repair_jobs = @service.repair_jobs.includes(repair: :customer).newest_first
+    # The repairs it was charged on are for the staff only: a visitor gets
+    # the name and the price, and no customer's name.
+    @repair_jobs = authenticated? ? @service.repair_jobs.includes(repair: :customer).newest_first : RepairJob.none
   end
 
   def new

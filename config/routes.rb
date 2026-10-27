@@ -1,4 +1,11 @@
 Rails.application.routes.draw do
+  # Lab 11: written by the authentication generator — signing in and out
+  # (DELETE /session), and the forgotten password.
+  resource :session
+  resources :passwords, param: :token
+  # Lab 11: signing up. No page lists, edits or deletes accounts.
+  resource :registration, only: %i[new create]
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "pages#home"
