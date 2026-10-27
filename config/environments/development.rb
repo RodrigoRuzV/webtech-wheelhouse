@@ -31,8 +31,13 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # Lab 11: no email leaves the machine. letter_opener writes each email
+  # (its HTML and its text part) to tmp/letter_opener/ and opens it in the
+  # browser the moment it is delivered. A delivery that fails raises, so an
+  # email can never be lost in silence.
+  config.action_mailer.delivery_method = :letter_opener
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
