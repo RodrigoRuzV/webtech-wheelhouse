@@ -6,7 +6,11 @@
 # or scopes, so every relationship below is set through its own `_id`
 # attribute rather than an association shorthand.
 #
-# Idempotent: the six tables this file owns are cleared before being
+# Lab 11: also the accounts (users) and their sessions. Every repair records
+# the account that took it in (intake_user_id), except R8 and R10; the
+# member of the staff (intake_staff_id) is filled from that account.
+#
+# Idempotent: the tables this file owns are cleared before being
 # rebuilt, and so are the tables of Active Storage (attachments, variant
 # records, blobs and their files in storage/) and of Action Text (Lab 9),
 # so running `bin/rails db:seed` twice leaves the same number of rows
@@ -28,6 +32,10 @@ ActiveRecord::Base.transaction do
 
   RepairJob.delete_all
   Repair.delete_all
+  # Lab 11: the sessions and the accounts go after the repairs (which point
+  # to the accounts) and before the staff (whom the accounts point to).
+  Session.delete_all
+  User.delete_all
   Bike.delete_all
   Service.delete_all
   StaffMember.delete_all
@@ -78,6 +86,26 @@ ActiveRecord::Base.transaction do
   martin    = StaffMember.create!(name: "Martín Soto",     role: "mechanic")
   valentina = StaffMember.create!(name: "Valentina Muñoz", role: "receptionist")
   roberto   = StaffMember.create!(name: "Roberto Ibáñez",  role: "owner")
+
+  # ---------------------------------------------------------------------
+  # Lab 11 — accounts. One per member of the staff, joined to them, with
+  # the role of what they do; plus one account of no one, with the default
+  # role. Every password is different. These accounts and passwords exist
+  # only in development (they are listed in the README).
+  # ---------------------------------------------------------------------
+  account = lambda do |email, password, staff_member: nil, role: nil|
+    attributes = { email_address: email, password: password,
+                   password_confirmation: password, staff_member: staff_member }
+    attributes[:role] = role if role # without one, the column's default
+    User.create!(attributes)
+  end
+
+  roberto_account   = account.call("roberto@wheelhouse.test",   "owner-roberto-2026",    staff_member: roberto,   role: "owner")
+  valentina_account = account.call("valentina@wheelhouse.test", "counter-valentina-26",  staff_member: valentina, role: "counter")
+  diego_account     = account.call("diego@wheelhouse.test",     "mechanic-diego-26",     staff_member: diego,     role: "mechanic")
+  camila_account    = account.call("camila@wheelhouse.test",    "mechanic-camila-26",    staff_member: camila,    role: "mechanic")
+  _martin_account   = account.call("martin@wheelhouse.test",    "mechanic-martin-26",    staff_member: martin,    role: "mechanic")
+  account.call("trainee@wheelhouse.test", "trainee-no-staff-26") # no member of the staff, default role
 
   # ---------------------------------------------------------------------
   # Customers — at least ten. Benjamín gets no repairs at all.
@@ -135,21 +163,21 @@ ActiveRecord::Base.transaction do
 
   # R1 — just dropped off, nothing decided yet.
   r1 = Repair.create!(
-    bike_id: bike_1.id, customer_id: ana.id, intake_staff_id: valentina.id,
+    bike_id: bike_1.id, customer_id: ana.id, intake_user_id: valentina_account.id,
     status: "dropped_off", created_at: now - 2.hours
   )
   add_jobs.call(r1, [ "Flat tire repair", nil ])
 
   # R2 — a mechanic is looking at it.
   r2 = Repair.create!(
-    bike_id: bike_2.id, customer_id: javier.id, intake_staff_id: valentina.id,
+    bike_id: bike_2.id, customer_id: javier.id, intake_user_id: diego_account.id,
     mechanic_id: diego.id, status: "diagnosing", created_at: now - 2.days
   )
   add_jobs.call(r2, [ "Brake adjustment", nil ])
 
   # R3 — quoted, waiting on the customer.
   r3 = Repair.create!(
-    bike_id: bike_3.id, customer_id: camila_v.id, intake_staff_id: valentina.id,
+    bike_id: bike_3.id, customer_id: camila_v.id, intake_user_id: valentina_account.id,
     mechanic_id: camila.id, status: "awaiting_approval", created_at: now - 4.days,
     quoted_at: now - 2.days, promised_on: Date.current + 3.days
   )
@@ -157,7 +185,7 @@ ActiveRecord::Base.transaction do
 
   # R4 — approved and being worked on; one job discounted for a regular.
   r4 = Repair.create!(
-    bike_id: bike_5.id, customer_id: francisco.id, intake_staff_id: valentina.id,
+    bike_id: bike_5.id, customer_id: francisco.id, intake_user_id: valentina_account.id,
     mechanic_id: martin.id, status: "in_progress", created_at: now - 6.days,
     quoted_at: now - 5.days, promised_on: Date.current + 1.day
   )
@@ -165,7 +193,7 @@ ActiveRecord::Base.transaction do
 
   # R5 — quoted, customer said no.
   r5 = Repair.create!(
-    bike_id: bike_8.id, customer_id: sofia.id, intake_staff_id: valentina.id,
+    bike_id: bike_8.id, customer_id: sofia.id, intake_user_id: valentina_account.id,
     mechanic_id: diego.id, status: "declined_pickup_pending", created_at: now - 5.days,
     quoted_at: now - 4.days, promised_on: Date.current - 1.day
   )
@@ -173,7 +201,7 @@ ActiveRecord::Base.transaction do
 
   # R6 — quoted, approved, finished; waiting at the counter.
   r6 = Repair.create!(
-    bike_id: bike_9.id, customer_id: cristobal.id, intake_staff_id: valentina.id,
+    bike_id: bike_9.id, customer_id: cristobal.id, intake_user_id: valentina_account.id,
     mechanic_id: martin.id, status: "ready_for_pickup", created_at: now - 3.days,
     quoted_at: now - 2.days, promised_on: Date.current, finished_at: now - 6.hours
   )
@@ -181,7 +209,7 @@ ActiveRecord::Base.transaction do
 
   # R7 — full lifecycle, already picked up.
   r7 = Repair.create!(
-    bike_id: bike_10.id, customer_id: isidora.id, intake_staff_id: valentina.id,
+    bike_id: bike_10.id, customer_id: isidora.id, intake_user_id: valentina_account.id,
     mechanic_id: diego.id, status: "picked_up", created_at: now - 10.days,
     quoted_at: now - 9.days, promised_on: Date.current - 5.days,
     finished_at: now - 4.days, returned_at: now - 3.days, returned_by_staff_id: valentina.id
@@ -189,6 +217,8 @@ ActiveRecord::Base.transaction do
   add_jobs.call(r7, [ "Chain replacement", nil ], [ "Tire replacement", nil ])
 
   # R8 — simple same-day job: no quote needed, dropped off and picked up today.
+  # Lab 11: one of the two repairs with no account recorded (written on the
+  # paper tag at the counter); only the member of the staff is known.
   r8 = Repair.create!(
     bike_id: bike_7.id, customer_id: matias.id, intake_staff_id: valentina.id,
     mechanic_id: camila.id, status: "picked_up", created_at: now - 6.hours,
@@ -198,13 +228,14 @@ ActiveRecord::Base.transaction do
 
   # R9 — overdue: promised days ago, still in progress.
   r9 = Repair.create!(
-    bike_id: bike_4.id, customer_id: ana.id, intake_staff_id: valentina.id,
+    bike_id: bike_4.id, customer_id: ana.id, intake_user_id: valentina_account.id,
     mechanic_id: martin.id, status: "in_progress", created_at: now - 12.days,
     quoted_at: now - 11.days, promised_on: Date.current - 4.days
   )
   add_jobs.call(r9, [ "Frame alignment check", nil ], [ "Bearing service", nil ])
 
   # R10 — from before last January: charged less than today's list price.
+  # Lab 11: from before there were accounts, so it records none.
   r10 = Repair.create!(
     bike_id: bike_6.id, customer_id: daniela.id, intake_staff_id: valentina.id,
     mechanic_id: diego.id, status: "picked_up", created_at: now - 14.months,
@@ -216,28 +247,28 @@ ActiveRecord::Base.transaction do
 
   # R11 — the same bike, back again, much more recently.
   r11 = Repair.create!(
-    bike_id: bike_6.id, customer_id: daniela.id, intake_staff_id: valentina.id,
+    bike_id: bike_6.id, customer_id: daniela.id, intake_user_id: camila_account.id,
     mechanic_id: camila.id, status: "diagnosing", created_at: now - 1.day
   )
   add_jobs.call(r11, [ "Brake bleed", nil ])
 
   # R12 — another bike, just dropped off.
   r12 = Repair.create!(
-    bike_id: bike_11.id, customer_id: javier.id, intake_staff_id: valentina.id,
+    bike_id: bike_11.id, customer_id: javier.id, intake_user_id: valentina_account.id,
     status: "dropped_off", created_at: now - 1.hour
   )
   add_jobs.call(r12, [ "Cable replacement", nil ])
 
   # R13 — being diagnosed.
   r13 = Repair.create!(
-    bike_id: bike_12.id, customer_id: sofia.id, intake_staff_id: valentina.id,
+    bike_id: bike_12.id, customer_id: sofia.id, intake_user_id: valentina_account.id,
     mechanic_id: diego.id, status: "diagnosing", created_at: now - 1.day
   )
   add_jobs.call(r13, [ "Wheel truing", nil ])
 
   # R14 — quoted, waiting on the customer.
   r14 = Repair.create!(
-    bike_id: bike_13.id, customer_id: matias.id, intake_staff_id: valentina.id,
+    bike_id: bike_13.id, customer_id: matias.id, intake_user_id: valentina_account.id,
     mechanic_id: martin.id, status: "awaiting_approval", created_at: now - 3.days,
     quoted_at: now - 2.days, promised_on: Date.current + 2.days
   )
@@ -245,7 +276,7 @@ ActiveRecord::Base.transaction do
 
   # R15 — simple job, finished, waiting at the counter.
   r15 = Repair.create!(
-    bike_id: bike_10.id, customer_id: isidora.id, intake_staff_id: valentina.id,
+    bike_id: bike_10.id, customer_id: isidora.id, intake_user_id: valentina_account.id,
     mechanic_id: camila.id, status: "ready_for_pickup", created_at: now - 2.days,
     promised_on: Date.current, finished_at: now - 2.hours
   )
@@ -253,14 +284,14 @@ ActiveRecord::Base.transaction do
 
   # R16 — a second, brand-new repair on Camila's bike.
   r16 = Repair.create!(
-    bike_id: bike_3.id, customer_id: camila_v.id, intake_staff_id: valentina.id,
+    bike_id: bike_3.id, customer_id: camila_v.id, intake_user_id: roberto_account.id,
     status: "dropped_off", created_at: now - 30.minutes
   )
   add_jobs.call(r16, [ "Headset adjustment", nil ])
 
   # R17 — an older, already-collected repair for Sofía.
   r17 = Repair.create!(
-    bike_id: bike_8.id, customer_id: sofia.id, intake_staff_id: valentina.id,
+    bike_id: bike_8.id, customer_id: sofia.id, intake_user_id: valentina_account.id,
     mechanic_id: diego.id, status: "picked_up", created_at: now - 8.days,
     quoted_at: now - 7.days, promised_on: Date.current - 5.days,
     finished_at: now - 4.days, returned_at: now - 3.days, returned_by_staff_id: valentina.id
@@ -375,6 +406,7 @@ ActiveRecord::Base.transaction do
 end
 
 puts "Seeded #{Service.count} services, #{StaffMember.count} staff, " \
+     "#{User.count} accounts, " \
      "#{Customer.count} customers, #{Bike.count} bikes, " \
      "#{Repair.count} repairs, #{RepairJob.count} repair jobs, " \
      "#{ActiveStorage::Attachment.count} attachments, #{ActiveStorage::Blob.count} blobs, " \

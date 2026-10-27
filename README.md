@@ -30,17 +30,53 @@ Wheelhouse is the system for a neighbourhood bicycle repair shop. It replaces th
     bin/rails db:prepare
     yarn install
 
-`db:prepare` creates the development and test databases if they don't exist, runs every migration in `db/migrate/` (including the tables of Active Storage and Action Text), and — the first time, on a fresh clone — loads `db/seeds.rb` automatically. A fresh clone ends up with a full workshop's worth of data (services, staff, customers, bikes, and repairs across every stage of the repair lifecycle, with their intake photos and diagnoses) with no separate seeding step. The seed's photos are copied into `storage/`, which git ignores: no uploaded file is ever committed. To reseed later without a fresh database, run `bin/rails db:seed` directly — it's safe to run more than once.
+`db:prepare` creates the development and test databases if they don't exist, runs every migration in `db/migrate/` (including the tables of Active Storage and Action Text), and — the first time, on a fresh clone — loads `db/seeds.rb` automatically. A fresh clone ends up with a full workshop's worth of data (services, staff and their accounts, customers, bikes, and repairs across every stage of the repair lifecycle, with their intake photos and diagnoses) with no separate seeding step. The seed's photos are copied into `storage/`, which git ignores: no uploaded file is ever committed. To reseed later without a fresh database, run `bin/rails db:seed` directly — it's safe to run more than once.
 
 ### Start the server
 
     bin/dev
 
-This starts Puma and the CSS watcher together (the watcher compiles the CSS once when it starts). Visit http://localhost:3000/repairs: every row shows the thumbnail of an intake photo and the beginning of the diagnosis. The first visit takes a moment while the thumbnails are generated; after that they are served from `storage/`. Use the navbar — Customers, Bikes, Repairs, Services and Staff each have a list page and a page per record, all read live from the database, so editing `db/seeds.rb` and reseeding changes what every page shows.
+This starts Puma and the CSS watcher together (the watcher compiles the CSS once when it starts). Visit http://localhost:3000/repairs: you are sent to sign in first (see the accounts below), and land back on the repairs after signing in. Every row shows the thumbnail of an intake photo and the beginning of the diagnosis. The first visit takes a moment while the thumbnails are generated; after that they are served from `storage/`. Use the navbar — Customers, Bikes, Repairs, Services and Staff each have a list page and a page per record, all read live from the database, so editing `db/seeds.rb` and reseeding changes what every page shows.
+
+## Accounts (Lab 11)
+
+Only the price list is public: http://localhost:3000/services and the page of each service. Every other page asks you to sign in with an email address and a password. Sign out with the button in the navigation bar.
+
+The seed creates these accounts. **They exist only in development**: they are made by `db/seeds.rb` in your local database, and none of these passwords is used anywhere else.
+
+| Email address | Password | Role | Member of the staff |
+|---|---|---|---|
+| `roberto@wheelhouse.test` | `owner-roberto-2026` | owner | Roberto Ibáñez |
+| `valentina@wheelhouse.test` | `counter-valentina-26` | counter | Valentina Muñoz |
+| `diego@wheelhouse.test` | `mechanic-diego-26` | mechanic | Diego Fuentes |
+| `camila@wheelhouse.test` | `mechanic-camila-26` | mechanic | Camila Rojas |
+| `martin@wheelhouse.test` | `mechanic-martin-26` | mechanic | Martín Soto |
+| `trainee@wheelhouse.test` | `trainee-no-staff-26` | mechanic (the default) | — none |
+
+- **Sign up** at http://localhost:3000/registration/new (linked from the sign-in page). A new account always gets the default role, `mechanic` (why: [`docs/decisions.md`](docs/decisions.md), decision 4), and belongs to no member of the staff. Passwords need at least 10 characters.
+- **Changing a role, or joining an account to a member of the staff**, is done from the console; no page lists, edits or deletes accounts:
+
+      bin/rails console
+      user = User.find_by(email_address: "trainee@wheelhouse.test")
+      user.update!(role: :counter, staff_member: StaffMember.find_by(name: "Valentina Muñoz"))
+
+  (That example fails on the seed's data, on purpose: Valentina already has an account, and a member of the staff has at most one.)
+- **Forgot your password?** Follow the link on the sign-in page. The email (below) brings a link that works once and expires in 15 minutes.
+
+### Where the emails go in development
+
+The application never sends a real email: there is no mail provider, no SMTP server and no credential, and nothing about email to configure. In development every email — the welcome email of a new account and the password-reset email — is delivered by the [`letter_opener`](https://github.com/ryanb/letter_opener) gem (installed by `bundle install`):
+
+- it **opens in a new tab of your browser** the moment it is sent (a few seconds after the response, since emails leave from a background job);
+- and it is **kept as a file in `tmp/letter_opener/`**, one folder per email, with its HTML part (`rich.html`) and its text part (`plain.html`). Open `rich.html` in a browser if the tab didn't open.
+
+The link of the password email is a full URL to http://localhost:3000, so clicking it opens the form for a new password in the app running locally.
+
+To see how each email looks without sending it, open the previews at http://localhost:3000/rails/mailers.
 
 ## The JSON API (Lab 10)
 
-Wheelhouse also answers programs that are not a browser, with a versioned JSON API under `/api/v1`. Every route, document, status and decision is written down in [`docs/api.md`](docs/api.md).
+Wheelhouse also answers programs that are not a browser, with a versioned JSON API under `/api/v1`. Lab 11's accounts don't touch it: it needs no session and is never redirected to sign in; the private routes still use the token. Every route, document, status and decision is written down in [`docs/api.md`](docs/api.md).
 
 - `GET /api/v1/services` and `GET /api/v1/services/:id` — the price list. **Public.**
 - `POST /api/v1/services` — registers a service. **Needs the token.**
@@ -93,7 +129,7 @@ The bicycle photos in `db/seeds/` (`bike-01.jpg` … `bike-07.jpg`) are from [Un
 ## Documents
 
 - [`docs/user-stories.md`](docs/user-stories.md) — the roles, the user stories, and their acceptance criteria.
-- [`docs/domain-model.md`](docs/domain-model.md) — the relational diagram (DBML, built in dbdiagram.io) matching the current schema, the repair lifecycle, the entity-to-story traceability table, the two modelling decisions defended, and the changes made since Lab 3 — lab by lab, up to the intake photos and the diagnosis of Lab 9 and the JSON API of Lab 10.
+- [`docs/domain-model.md`](docs/domain-model.md) — the relational diagram (DBML, built in dbdiagram.io) matching the current schema, the repair lifecycle, the entity-to-story traceability table, the two modelling decisions defended, and the changes made since Lab 3 — lab by lab, up to the intake photos and the diagnosis of Lab 9, the JSON API of Lab 10 and the accounts of Lab 11.
 - [`docs/api.md`](docs/api.md) — the JSON API of Lab 10: its routes, the shape of each document and of an error, and its decisions (how a price travels, what a repair leaves out).
-- [`docs/decisions.md`](docs/decisions.md) — three questions for the shop owner that the original description doesn't answer, and what changes in the model depending on the answer.
+- [`docs/decisions.md`](docs/decisions.md) — three questions for the shop owner that the original description doesn't answer, and what changes in the model depending on the answer; plus Lab 11's decisions (the default role of an account, and who took a repair in).
 - [`docs/wireframes.md`](docs/wireframes.md) — the low-fidelity screens and the navigation graph between them.

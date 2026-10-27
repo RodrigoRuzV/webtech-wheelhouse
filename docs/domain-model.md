@@ -142,6 +142,41 @@ Lab 10 adds a JSON API under `/api/v1` for two programs that are not a browser: 
 - **No foreign key leaves the application**: the bike, the customer's name and the lines travel inside the repair. The customer's phone, the staff, the diagnosis and the photos are left out of the API on purpose.
 - The details — routes, documents, errors and decisions — are in [`docs/api.md`](api.md).
 
+## Changes since Lab 10
+
+Lab 11 adds accounts for the people of the workshop. Customers still have none. **This supersedes the line `intake_staff_id ... not null` of `repairs` in the DBML above**, which is left as it was written.
+
+```dbml
+Table users {
+  id integer [pk, increment]
+  email_address varchar [not null, unique, note: 'stored downcased: Ana@Wheelhouse.cl and ana@wheelhouse.cl are one account']
+  password_digest varchar [not null, note: 'bcrypt digest (has_secure_password); no column holds a password']
+  role varchar [not null, default: 'mechanic', note: 'owner / mechanic / counter — enum in User; default = fewest permissions, see decisions.md']
+  staff_member_id integer [ref: - staff_members.id, unique, note: 'optional; one account per member of the staff at most']
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}
+
+Table sessions {
+  id integer [pk, increment]
+  user_id integer [ref: > users.id, not null]
+  ip_address varchar
+  user_agent varchar
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}
+
+// repairs, changed:
+//   intake_user_id  integer [ref: > users.id, note: 'the account that took it in, from the session; NULL before Lab 11']
+//   intake_staff_id integer [ref: > staff_members.id, note: 'now NULL allowed; filled from the account\'s member of the staff']
+```
+
+- **`users` and `sessions`** are written by the Rails 8 authentication generator (`bin/rails generate authentication`); Lab 11 adds `role` and `staff_member_id` to `users` before its migration was first run.
+- **`users.staff_member_id`** is a one-to-one: a foreign key, plus a unique index that refuses a second account for the same member. An account with no member of the staff is valid (someone who signed up and hasn't been joined to anyone yet). A member of the staff with an account can't be deleted (`has_one :user, dependent: :restrict_with_error`).
+- **`repairs.intake_user_id`** records the account that took the repair in. The controller reads it from the session on create; it is not a field of the form, nor on the permitted list, and editing a repair doesn't change it. It is `NULL` on the repairs from before accounts (two in the seed).
+- **`repairs.intake_staff_id`** is no longer chosen in the form, and allows `NULL`. A new repair copies it from the account's member of the staff, so a member's list of intake repairs keeps working; an account of no one leaves it empty. See decision 5 in [`decisions.md`](decisions.md).
+- The API does not change: `/api/v1` keeps its token, needs no session, and its documents still leave the staff out.
+
 ## Lifecycle
 
 `repairs.status` is the lifecycle of a single repair, from the bike arriving to the bike leaving.
