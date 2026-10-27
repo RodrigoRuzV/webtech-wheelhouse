@@ -14,11 +14,14 @@
         <th scope="col">Customer</th>
         <th scope="col">Status</th>
         <th scope="col">Promised</th>
+        <th scope="col">Taken in by</th>
         <th scope="col">Diagnosis</th>
       </tr>
     </thead>
     <tbody>
-      <%= render @repairs %>
+      <%# Lab 11: only the repairs index shows who took each repair in; the
+          other lists that render this partial don't preload intake_user. %>
+      <%= render partial: "repairs/repair", collection: @repairs, locals: { show_intake: true } %>
     </tbody>
   </table>
 <% else %>

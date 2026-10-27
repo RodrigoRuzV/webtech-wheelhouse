@@ -21,8 +21,19 @@
       <td><%= status_label(@repair.status) %></td>
     </tr>
     <tr>
-      <th scope="row">Intake staff</th>
-      <td><%= link_to @repair.intake_staff.name, @repair.intake_staff %></td>
+      <th scope="row">Taken in by</th>
+      <td>
+        <%# Lab 11: the account that took it in. Repairs taken in before
+            there were accounts have none, and show the member of the staff
+            recorded at the time, if any. %>
+        <% if @repair.intake_user %>
+          <%= account_label(@repair.intake_user) %>
+        <% elsif @repair.intake_staff %>
+          <%= link_to @repair.intake_staff.name, @repair.intake_staff %> <span class="text-body-secondary">(before accounts)</span>
+        <% else %>
+          —
+        <% end %>
+      </td>
     </tr>
     <tr>
       <th scope="row">Mechanic</th>

@@ -26,6 +26,9 @@
   <td><%= link_to repair.customer.name, repair.customer %></td>
   <td><%= link_to status_label(repair.status), repair %></td>
   <td><%= repair.promised_on&.strftime("%b %-d, %Y") || "—" %></td>
+  <% if local_assigns.fetch(:show_intake, false) %>
+    <td><%= repair.intake_user ? account_label(repair.intake_user) : "—" %></td>
+  <% end %>
   <td class="diagnosis-excerpt text-truncate text-body-secondary">
     <%= diagnosis_excerpt(repair) %>
   </td>

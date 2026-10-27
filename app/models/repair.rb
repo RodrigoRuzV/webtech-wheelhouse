@@ -1,7 +1,12 @@
 class Repair < ApplicationRecord
   belongs_to :bike
   belongs_to :customer
-  belongs_to :intake_staff, class_name: "StaffMember"
+  # Lab 11: intake_staff is no longer chosen in the form; it is filled from
+  # the account that took the repair in, when that account belongs to a
+  # member of the staff. intake_user is set by the controller from the
+  # session; it is NULL on repairs from before accounts.
+  belongs_to :intake_staff, class_name: "StaffMember", optional: true
+  belongs_to :intake_user, class_name: "User", optional: true, inverse_of: :intake_repairs
   belongs_to :mechanic, class_name: "StaffMember", optional: true
   belongs_to :returned_by_staff, class_name: "StaffMember", optional: true
   has_many :repair_jobs, dependent: :destroy, inverse_of: :repair
@@ -59,6 +64,7 @@ class Repair < ApplicationRecord
     reject_if: ->(attributes) { attributes["service_id"].blank? }
 
   before_validation :take_customer_from_bike
+  before_validation :take_intake_staff_from_user, on: :create
 
   validates :status, presence: true
 
@@ -94,6 +100,10 @@ class Repair < ApplicationRecord
     if new_record? ? customer.nil? : will_save_change_to_bike_id?
       self.customer = bike.customer
     end
+  end
+
+  def take_intake_staff_from_user
+    self.intake_staff ||= intake_user&.staff_member
   end
 
   def promised_and_returned_not_before_drop_off

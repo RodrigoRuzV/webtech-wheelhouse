@@ -2,7 +2,9 @@
     tables in one save: the repair, and its lines (repair_jobs) through
     accepts_nested_attributes_for. Works without JavaScript: the controller
     hands it a few empty lines, and an empty line is ignored on save.
-    The customer is not a field: it is taken from the bike's owner. %>
+    The customer is not a field: it is taken from the bike's owner.
+    Lab 11: who took the repair in is not a field either: the controller
+    reads it from the session. %>
 <%# data-turbo="false": the form is submitted by the browser itself, not
     by Turbo, so a refused write (422) leaves the URL bar at the path the
     form was posted to (/repairs or /repairs/:id) and a valid one follows the
@@ -31,14 +33,6 @@
   </div>
 
   <div class="row">
-    <div class="col-md-6 mb-3">
-      <%= f.label :intake_staff_id, "Taken in by", class: "form-label" %>
-      <%= f.collection_select :intake_staff_id, staff_members, :id, :name,
-            { include_blank: "Choose who took it in" },
-            class: field_class(f, :intake_staff_id, :intake_staff, base: "form-select") %>
-      <%= field_errors(f, :intake_staff_id, :intake_staff) %>
-    </div>
-
     <div class="col-md-6 mb-3">
       <%= f.label :mechanic_id, "Mechanic", class: "form-label" %>
       <%= f.collection_select :mechanic_id, mechanics, :id, :name,

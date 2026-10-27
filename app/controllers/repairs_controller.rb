@@ -13,7 +13,9 @@ class RepairsController < ApplicationController
   def index
     # Newest first: the counter and the mechanics care about what just
     # came in and what is still moving, not what happened first overall.
-    @repairs = with_photos_and_diagnosis(Repair.includes(:bike, :customer)).newest_first
+    # Lab 11: intake_user and its member of the staff are preloaded, so
+    # the "Taken in by" column costs two queries whatever the number of rows.
+    @repairs = with_photos_and_diagnosis(Repair.includes(:bike, :customer, intake_user: :staff_member)).newest_first
   end
 
   def show
@@ -34,6 +36,11 @@ class RepairsController < ApplicationController
 
   def create
     @repair = Repair.new(repair_params)
+    # Lab 11: who took the repair in is the account at the keyboard, read
+    # from the session and never from the form. It is not on the permitted
+    # list, so an intake_user_id written by hand is dropped; update never
+    # sets it, so editing a repair doesn't change it.
+    @repair.intake_user = Current.user
 
     if @repair.save
       redirect_to @repair, notice: "Repair for #{@repair.customer.name}'s bike #{@repair.bike.serial_number} was taken in."
@@ -64,7 +71,8 @@ class RepairsController < ApplicationController
 
   def set_repair
     @repair = with_photos_and_diagnosis(
-      Repair.includes(:bike, :customer, :intake_staff, :mechanic, :returned_by_staff, repair_jobs: :service)
+      Repair.includes(:bike, :customer, :intake_staff, :mechanic, :returned_by_staff,
+                     { intake_user: :staff_member }, repair_jobs: :service)
     ).find(params[:id])
   end
 
@@ -86,7 +94,9 @@ class RepairsController < ApplicationController
 
   def repair_params
     params.expect(repair: [
-      :bike_id, :intake_staff_id, :mechanic_id, :status,
+      # Lab 11: no intake_staff_id and no intake_user_id. Who took the
+      # repair in comes from the session (create).
+      :bike_id, :mechanic_id, :status,
       :promised_on, :quoted_at, :finished_at, :returned_at, :returned_by_staff_id,
       # Lab 9. photos is a list: the signed ids of the photos the repair
       # already has (hidden fields of the form) plus the files just chosen.
